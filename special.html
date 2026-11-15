@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef3f9">
+<title>专项词汇检测 · 5 题</title>
+<style>
+  :root{
+    --bg:#eef3f9; --card:#ffffff; --ink:#102a43; --ink-2:#5a7189; --muted:#8fa3b8;
+    --blue:#1e5aa8; --blue-dark:#12395c; --line:#e0e8f2; --warn:#b04a3a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#f7fafd 0%,var(--bg) 340px,var(--bg) 100%);
+    color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+    min-height:100vh;overflow-x:hidden;
+    padding:22px 16px 44px;
+  }
+  .wrap{width:100%;max-width:600px;margin:0 auto;min-width:0}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:0 2px}
+  .mark{
+    width:30px;height:30px;border-radius:8px;background:var(--blue-dark);color:#fff;
+    display:grid;place-items:center;font:700 12px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.04em;
+  }
+  .brand-t{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.2em}
+  .score-pill{
+    margin-left:auto;font-size:12px;font-weight:700;color:var(--blue);
+    background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 12px;
+  }
+  .score-pill b{font-size:13px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 8px 28px rgba(16,42,67,.06);padding:24px 22px 22px;
+  }
+  .head{margin-bottom:14px}
+  h1{font-size:24px;line-height:1.4;margin:0 0 12px;letter-spacing:.01em;font-weight:700;position:relative;padding-bottom:14px}
+  h1::after{content:"";position:absolute;left:0;bottom:0;width:38px;height:3px;background:var(--blue);border-radius:2px}
+  .sub{color:var(--ink-2);font-size:13.5px;line-height:1.8;margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .chip{
+    font-size:12.5px;color:#365a7d;background:#fff;border:1px solid var(--line);
+    border-radius:6px;padding:5px 10px;font-weight:600;
+  }
+  .q{margin-bottom:14px;animation:fade .25s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .qno{font-size:11.5px;font-weight:700;color:var(--blue);letter-spacing:.16em}
+  .state{font-size:12px;color:var(--muted)}
+  .state.ok{color:var(--blue);font-weight:700}
+  .state.no{color:var(--warn);font-weight:700}
+  .word{font:600 30px/1.3 Georgia,"Times New Roman",serif;overflow-wrap:anywhere}
+  .ipa{font:italic 13px/1.5 Georgia,"Times New Roman",serif;color:var(--muted);margin-top:1px}
+  .opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+  .opt{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:#fff;border:1px solid #dfe7f2;border-radius:10px;padding:12px 14px;
+    font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;
+    line-height:1.5;transition:border-color .15s,background .15s,opacity .15s;
+  }
+  .opt:hover:not(:disabled){border-color:#b9cde6}
+  .opt:disabled{cursor:default}
+  .opt .k{
+    flex:none;width:24px;height:24px;border-radius:6px;background:#eef4fb;color:#6b8399;
+    display:grid;place-items:center;font-size:12px;font-weight:700;
+  }
+  .opt .txt{flex:1;min-width:0;overflow-wrap:anywhere}
+  .opt.right{border-color:var(--blue);background:#f4f9ff}
+  .opt.right .k{background:var(--blue);color:#fff}
+  .opt.wrong{border-color:#d8a49c;background:#fdf5f4}
+  .opt.wrong .k{background:var(--warn);color:#fff}
+  .opt.dim{opacity:.5}
+  .exp{
+    margin-top:14px;border-left:3px solid #dbe6f3;padding:2px 0 2px 12px;
+    font-size:13px;line-height:1.85;color:var(--ink-2);
+  }
+  .exp b{color:var(--ink);font-weight:600}
+  .summary{margin-top:14px;display:none}
+  .summary.show{display:block}
+  .eyebrow{font-size:11.5px;color:var(--muted);letter-spacing:.18em;font-weight:600}
+  .score{display:flex;align-items:baseline;gap:8px;margin:8px 0 2px}
+  .score .n{font:600 54px/1 Georgia,serif;color:var(--ink)}
+  .score .d{font-size:17px;color:var(--muted)}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;margin:16px 0 4px}
+  .dot{width:21px;height:5px;border-radius:2px;background:var(--blue)}
+  .dot.bad{background:var(--warn)}
+  .verdict{font-size:14px;color:var(--ink-2);margin:14px 0 16px;line-height:1.85}
+  .verdict .wl{color:var(--ink);font-family:Georgia,serif;font-weight:600}
+  .btn{
+    width:100%;border:0;border-radius:10px;padding:13px 18px;font-size:15.5px;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:background .15s ease,border-color .15s ease;
+  }
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:#17497f}
+  .btn-primary:active{background:var(--blue-dark)}
+  .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:20px;letter-spacing:.06em}
+  @media (max-width:420px){
+    body{padding:18px 12px 36px}
+    .card{padding:20px 17px 18px;border-radius:16px}
+    .word{font-size:26px}
+    .opt{font-size:14.5px;padding:11px 12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">EN</div>
+    <div class="brand-t">WORD CHECK</div>
+    <div class="score-pill">已答 <b id="doneN">0</b> / 5</div>
+  </div>
+
+  <section class="card head">
+    <h1>专项词汇检测</h1>
+    <p class="sub">5 个高频词，选出正确的中文释义。点击选项立即判对错，并附释义与搭配。</p>
+    <div class="chips">
+      <span class="chip">constant</span>
+      <span class="chip">precious</span>
+      <span class="chip">resource</span>
+      <span class="chip">productive</span>
+      <span class="chip">stimulation</span>
+    </div>
+  </section>
+
+  <div id="qs"></div>
+
+  <section class="card summary" id="summary">
+    <div class="eyebrow">本次得分</div>
+    <div class="score"><span class="n" id="scoreN">0</span><span class="d">/ 5</span></div>
+    <div class="dots" id="dots"></div>
+    <p class="verdict" id="verdict"></p>
+    <button class="btn btn-primary" id="againBtn">重做一遍</button>
+  </section>
+
+  <div class="foot">688 高频词 · 专项练习</div>
+</div>
+
+<script>
+const QS = [
+  {
+    w: "constant", ipa: "/ˈkɒnstənt/", ans: 1,
+    opts: ["短暂的；临时的", "持续不断的；恒定的", "频繁的；屡次的", "逐渐的；渐进的"],
+    tip: "<b>constant</b> 指“持续不断的；恒定的”，常见搭配 constant temperature（恒温）、a constant stream of visitors（络绎不绝的访客）。其他选项分别是 temporary、frequent、gradual 的释义。"
+  },
+  {
+    w: "precious", ipa: "/ˈpreʃəs/", ans: 2,
+    opts: ["昂贵的；花钱多的", "精致的；精细的", "珍贵的；宝贵的", "稀有的；罕见的"],
+    tip: "<b>precious</b> 指“珍贵的；宝贵的”，如 precious time（宝贵的时间）、precious metals（贵金属）。expensive 是“昂贵的”，delicate 是“精致的”，rare 是“稀有的”。"
+  },
+  {
+    w: "resource", ipa: "/rɪˈsɔːrs/", ans: 1,
+    opts: ["来源；出处", "资源；物力", "储备；积蓄", "精力；活力"],
+    tip: "<b>resource</b> 指“资源；物力”，常见搭配 natural resources（自然资源）、human resources（人力资源）。source 是“来源”，reserve 是“储备”，energy 是“精力”。"
+  },
+  {
+    w: "productive", ipa: "/prəˈdʌktɪv/", ans: 0,
+    opts: ["富有成效的；多产的", "有利可图的；赚钱的", "富有创造力的", "勤奋的；用功的"],
+    tip: "<b>productive</b> 指“富有成效的；多产的”，如 a productive day（高效的一天）、highly productive（高产的）。profitable 是“有利可图的”，creative 是“有创造力的”，diligent 是“勤奋的”。"
+  },
+  {
+    w: "stimulation", ipa: "/ˌstɪmjuˈleɪʃn/", ans: 3,
+    opts: ["模拟；仿真", "估计；评估", "刺激物；兴奋剂", "刺激；激励"],
+    tip: "<b>stimulation</b> 是名词，指“刺激；激励”，动词是 stimulate（促进；激发）。simulation 是“模拟”，estimation 是“估计”，stimulant 才是“兴奋剂”，四个词词形接近，最容易混。"
+  }
+];
+
+const LETTERS = ["A", "B", "C", "D"];
+const state = { picks: new Array(QS.length).fill(-1) };
+const qsEl = document.getElementById("qs");
+const summaryEl = document.getElementById("summary");
+
+function build() {
+  qsEl.innerHTML = "";
+  summaryEl.classList.remove("show");
+  state.picks.fill(-1);
+  document.getElementById("doneN").textContent = "0";
+
+  QS.forEach((q, qi) => {
+    const card = document.createElement("section");
+    card.className = "card q";
+    card.style.animationDelay = (qi * 40) + "ms";
+
+    const head = document.createElement("div");
+    head.className = "qhead";
+    head.innerHTML = '<span class="qno">QUESTION ' + String(qi + 1).padStart(2, "0") + '</span><span class="state">未作答</span>';
+    card.appendChild(head);
+
+    const word = document.createElement("div");
+    word.className = "word";
+    word.textContent = q.w;
+    card.appendChild(word);
+
+    const ipa = document.createElement("div");
+    ipa.className = "ipa";
+    ipa.textContent = q.ipa;
+    card.appendChild(ipa);
+
+    const opts = document.createElement("div");
+    opts.className = "opts";
+    q.opts.forEach((text, oi) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      b.innerHTML = '<span class="k">' + LETTERS[oi] + '</span><span class="txt"></span>';
+      b.querySelector(".txt").textContent = text;
+      b.addEventListener("click", function () { choose(qi, oi); });
+      opts.appendChild(b);
+    });
+    card.appendChild(opts);
+    qsEl.appendChild(card);
+  });
+}
+
+function choose(qi, oi) {
+  if (state.picks[qi] !== -1) return;
+  const q = QS[qi];
+  state.picks[qi] = oi;
+
+  const card = qsEl.children[qi];
+  const buttons = card.querySelectorAll(".opt");
+  buttons.forEach(function (b, bi) {
+    b.disabled = true;
+    if (bi === q.ans) b.classList.add("right");
+    else if (bi === oi) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+
+  const ok = oi === q.ans;
+  const st = card.querySelector(".state");
+  st.textContent = ok ? "答对了" : "答错了";
+  st.classList.add(ok ? "ok" : "no");
+
+  const exp = document.createElement("div");
+  exp.className = "exp";
+  exp.innerHTML = (ok ? "" : "正确答案是 " + LETTERS[q.ans] + "。<br>") + q.tip;
+  card.appendChild(exp);
+
+  const done = state.picks.filter(function (v) { return v !== -1; }).length;
+  document.getElementById("doneN").textContent = done;
+  if (done === QS.length) showSummary();
+}
+
+function showSummary() {
+  const right = QS.reduce(function (sum, q, i) { return sum + (state.picks[i] === q.ans ? 1 : 0); }, 0);
+  document.getElementById("scoreN").textContent = right;
+
+  const dots = document.getElementById("dots");
+  dots.innerHTML = "";
+  QS.forEach(function (q, i) {
+    const d = document.createElement("span");
+    d.className = "dot" + (state.picks[i] === q.ans ? "" : " bad");
+    dots.appendChild(d);
+  });
+
+  const wrong = QS.filter(function (q, i) { return state.picks[i] !== q.ans; }).map(function (q) { return q.w; });
+  const v = document.getElementById("verdict");
+  if (right === 5) v.innerHTML = "5 题全对，这组词掌握扎实，可以直接进入下一组。";
+  else if (right === 4) v.innerHTML = "错 1 题。把错词 <span class=\"wl\">" + wrong.join("、") + "</span> 的释义和搭配读两遍。";
+  else if (right === 3) v.innerHTML = "错 2 题。重点区分词形相近、义项易混的词：<span class=\"wl\">" + wrong.join("、") + "</span>。";
+  else v.innerHTML = "错 " + (5 - right) + " 题。先过一遍这 5 个词的释义和搭配，再重测。<span class=\"wl\">" + wrong.join("、") + "</span>";
+
+  summaryEl.classList.add("show");
+}
+
+document.getElementById("againBtn").addEventListener("click", function () {
+  build();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+build();
+</script>
+</body>
+</html>
