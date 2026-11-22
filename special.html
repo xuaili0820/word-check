@@ -95,6 +95,26 @@
   .btn-primary{background:var(--blue);color:#fff}
   .btn-primary:hover{background:#17497f}
   .btn-primary:active{background:var(--blue-dark)}
+  .fields{display:flex;gap:10px;margin:14px 0 0;flex-wrap:wrap}
+  .field{flex:1 1 140px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-2);font-weight:600}
+  .field i{font-style:normal;color:var(--muted);font-weight:400}
+  .field input{
+    font:inherit;font-size:15px;font-weight:400;color:var(--ink);background:#fff;
+    border:1px solid #d9e3ef;border-radius:9px;padding:10px 12px;outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,90,168,.08)}
+  .field input::placeholder{color:#a9b8c8}
+  .field input.err{border-color:#d8a49c;box-shadow:0 0 0 3px rgba(176,74,58,.08)}
+  .formerr{color:var(--warn);font-size:12.5px;margin:8px 0 0}
+  .privacy{color:var(--muted);font-size:11.5px;line-height:1.7;margin:8px 0 0}
+  .submit-note{margin:4px 0 16px;font-size:12.5px;color:var(--muted);line-height:1.7}
+  .submit-note.ok{color:var(--blue)}
+  .submit-note.no{color:var(--warn)}
+  .submit-note button{
+    background:none;border:0;color:var(--blue);font:inherit;font-weight:600;
+    cursor:pointer;padding:0 2px;text-decoration:underline;
+  }
   .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:20px;letter-spacing:.06em}
   @media (max-width:420px){
     body{padding:18px 12px 36px}
@@ -122,6 +142,12 @@
       <span class="chip">productive</span>
       <span class="chip">stimulation</span>
     </div>
+    <div class="fields">
+      <label class="field"><span>姓名</span><input id="stuName" maxlength="20" placeholder="请输入姓名" autocomplete="name"></label>
+      <label class="field"><span>班级 <i>选填</i></span><input id="stuClass" maxlength="20" placeholder="如：高一3班" autocomplete="off"></label>
+    </div>
+    <p class="formerr" id="formErr" hidden>请填写姓名后再提交。</p>
+    <p class="privacy">姓名与成绩仅用于课堂统计，老师可见；不收集手机号等信息。</p>
   </section>
 
   <div id="qs"></div>
@@ -131,12 +157,15 @@
     <div class="score"><span class="n" id="scoreN">0</span><span class="d">/ 5</span></div>
     <div class="dots" id="dots"></div>
     <p class="verdict" id="verdict"></p>
+    <p class="submit-note" id="submitNote"></p>
     <button class="btn btn-primary" id="againBtn">重做一遍</button>
   </section>
 
   <div class="foot">688 高频词 · 专项练习</div>
 </div>
 
+<script src="supabase.js"></script>
+<script src="config.js"></script>
 <script>
 const QS = [
   {
@@ -167,14 +196,36 @@ const QS = [
 ];
 
 const LETTERS = ["A", "B", "C", "D"];
-const state = { picks: new Array(QS.length).fill(-1) };
+const CFG = window.WORD_CHECK_CONFIG || {};
+const NAME_KEY = "wc_stu_name", CLASS_KEY = "wc_stu_class";
+const state = { picks: new Array(QS.length).fill(-1), right: 0, detail: [], startedAt: 0, subId: "", submitted: false, db: null };
 const qsEl = document.getElementById("qs");
 const summaryEl = document.getElementById("summary");
+
+function uid() {
+  if (window.crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+function stuName() {
+  return document.getElementById("stuName").value.trim().slice(0, 20);
+}
+
+function stuClass() {
+  return document.getElementById("stuClass").value.trim().slice(0, 20);
+}
 
 function build() {
   qsEl.innerHTML = "";
   summaryEl.classList.remove("show");
   state.picks.fill(-1);
+  state.submitted = false;
+  state.detail = [];
+  state.startedAt = Date.now();
+  state.subId = uid();
+  document.getElementById("submitNote").textContent = "";
+  document.getElementById("submitNote").className = "submit-note";
+  document.getElementById("formErr").hidden = true;
   document.getElementById("doneN").textContent = "0";
 
   QS.forEach((q, qi) => {
@@ -246,6 +297,15 @@ function showSummary() {
   const right = QS.reduce(function (sum, q, i) { return sum + (state.picks[i] === q.ans ? 1 : 0); }, 0);
   document.getElementById("scoreN").textContent = right;
 
+  state.right = right;
+  state.detail = QS.map(function (q, i) {
+    const picked = state.picks[i];
+    return {
+      type: "e2c", word: q.w, mean: q.opts[q.ans], answer: q.opts[q.ans],
+      picked: picked >= 0 ? q.opts[picked] : "", ok: picked === q.ans
+    };
+  });
+
   const dots = document.getElementById("dots");
   dots.innerHTML = "";
   QS.forEach(function (q, i) {
@@ -262,12 +322,105 @@ function showSummary() {
   else v.innerHTML = "错 " + (5 - right) + " 题。先过一遍这 5 个词的释义和搭配，再重测。<span class=\"wl\">" + wrong.join("、") + "</span>";
 
   summaryEl.classList.add("show");
+  requestSubmit(right);
 }
+
+function getClient() {
+  if (!window.supabase || typeof window.supabase.createClient !== "function") throw new Error("SDK 未加载");
+  if (!state.db) state.db = window.supabase.createClient(CFG.url, CFG.anonKey);
+  return state.db;
+}
+
+function requestSubmit(score) {
+  const note = document.getElementById("submitNote");
+  if (!CFG.url || !CFG.anonKey) {
+    note.className = "submit-note";
+    note.textContent = "本地预览：未连接统计后台，本次成绩不会上传。";
+    return;
+  }
+  if (!stuName()) {
+    note.className = "submit-note";
+    note.innerHTML = '成绩还未提交。<button type="button" id="gateBtn">填写姓名并提交</button>';
+    document.getElementById("gateBtn").onclick = function () {
+      document.getElementById("formErr").hidden = false;
+      document.getElementById("stuName").classList.add("err");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(function () { document.getElementById("stuName").focus(); }, 300);
+    };
+    return;
+  }
+  submitResult(score, state.detail);
+}
+
+async function submitResult(score, detail) {
+  const note = document.getElementById("submitNote");
+  if (state.submitted) return;
+
+  const name = stuName(), klass = stuClass();
+  try {
+    localStorage.setItem(NAME_KEY, name);
+    localStorage.setItem(CLASS_KEY, klass);
+  } catch (e) {}
+
+  const payload = {
+    sub_id: state.subId,
+    name: name,
+    klass: klass,
+    quiz: "special",
+    score: score,
+    total: QS.length,
+    duration_ms: Math.max(0, Date.now() - state.startedAt),
+    started_at: new Date(state.startedAt).toISOString(),
+    answers: detail
+  };
+  const delays = [1000, 3000, 6000];
+  const current = function () { return state.subId === payload.sub_id; };
+
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    if (!current()) return;
+    note.className = "submit-note";
+    note.textContent = attempt === 0 ? "正在提交成绩…" : "提交失败，正在重试（" + attempt + "/3）…";
+    try {
+      const res = await getClient().from(CFG.table || "submissions").insert(payload);
+      if (res && res.error) throw res.error;
+      if (!current()) return;
+      state.submitted = true;
+      document.getElementById("formErr").hidden = true;
+      document.getElementById("stuName").classList.remove("err");
+      note.className = "submit-note ok";
+      note.textContent = "成绩已提交给老师。";
+      return;
+    } catch (e) {
+      if (!current()) return;
+      if (attempt === 3) {
+        note.className = "submit-note no";
+        note.innerHTML = '成绩已生成，但提交未成功。<button type="button" id="retryBtn">重新提交</button>';
+        document.getElementById("retryBtn").onclick = function () { submitResult(score, detail); };
+        return;
+      }
+      await new Promise(function (r) { setTimeout(r, delays[attempt]); });
+    }
+  }
+}
+
+document.getElementById("stuName").addEventListener("input", function () {
+  if (!summaryEl.classList.contains("show") || state.submitted) return;
+  if (stuName()) {
+    document.getElementById("formErr").hidden = true;
+    this.classList.remove("err");
+    requestSubmit(state.right);
+  }
+});
 
 document.getElementById("againBtn").addEventListener("click", function () {
   build();
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
+
+try {
+  document.getElementById("stuName").value = localStorage.getItem(NAME_KEY) || "";
+  document.getElementById("stuClass").value = localStorage.getItem(CLASS_KEY) || "";
+} catch (e) {}
 
 build();
 </script>

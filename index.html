@@ -34,7 +34,7 @@
   h1{font-size:24px;line-height:1.4;margin:0 0 14px;letter-spacing:.01em;font-weight:700;position:relative;padding-bottom:14px}
   h1::after{content:"";position:absolute;left:0;bottom:0;width:38px;height:3px;background:var(--blue);border-radius:2px}
   .sub{color:var(--ink-2);font-size:13.5px;line-height:1.8;margin:0}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
   .chip{
     font-size:12.5px;color:#365a7d;background:#fff;border:1px solid var(--line);
     border-radius:6px;padding:5px 10px;font-weight:600;
@@ -105,6 +105,26 @@
   .item .ans{font-size:12.5px;margin-top:8px;display:flex;gap:16px;flex-wrap:wrap}
   .ok{color:var(--blue)}
   .no{color:var(--warn)}
+  .fields{display:flex;gap:10px;margin:18px 0 0;flex-wrap:wrap}
+  .field{flex:1 1 140px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-2);font-weight:600}
+  .field i{font-style:normal;color:var(--muted);font-weight:400}
+  .field input{
+    font:inherit;font-size:15px;font-weight:400;color:var(--ink);background:#fff;
+    border:1px solid #d9e3ef;border-radius:9px;padding:10px 12px;outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,90,168,.08)}
+  .field input::placeholder{color:#a9b8c8}
+  .formerr{color:var(--warn);font-size:12.5px;margin:8px 0 0}
+  .privacy{color:var(--muted);font-size:11.5px;line-height:1.7;margin:8px 0 0}
+  .submit-note{margin:12px 0 0;font-size:12.5px;color:var(--muted);line-height:1.7}
+  .submit-note.ok{color:var(--blue)}
+  .submit-note.no{color:var(--warn)}
+  .submit-note button{
+    background:none;border:0;color:var(--blue);font:inherit;font-weight:600;
+    cursor:pointer;padding:0 2px;text-decoration:underline;
+  }
+  #startBtn{margin-top:20px}
   .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:20px;letter-spacing:.06em}
 </style>
 </head>
@@ -124,6 +144,12 @@
       <span class="chip">10 道随机题</span>
       <span class="chip">随时重测</span>
     </div>
+    <div class="fields">
+      <label class="field"><span>姓名</span><input id="stuName" maxlength="20" placeholder="请输入姓名" autocomplete="name"></label>
+      <label class="field"><span>班级 <i>选填</i></span><input id="stuClass" maxlength="20" placeholder="如：高一3班" autocomplete="off"></label>
+    </div>
+    <p class="formerr" id="formErr" hidden>请填写姓名后再开始。</p>
+    <p class="privacy">姓名与成绩仅用于课堂统计，老师可见；不收集手机号等信息。</p>
     <button class="btn btn-primary" id="startBtn">开始检测</button>
     <div class="rule">每次打开都会重新抽题，可反复练习直到整张词表过一遍。</div>
   </section>
@@ -147,6 +173,7 @@
     <div class="score"><span class="n" id="scoreN">0</span><span class="d">/ 10</span></div>
     <div class="polaroid" id="polaroid"></div>
     <p class="verdict" id="verdict"></p>
+    <p class="submit-note" id="submitNote"></p>
     <div id="wrongBox"></div>
     <div class="btn-row">
       <button class="btn btn-ghost" id="homeBtn" style="flex:1">返回首页</button>
@@ -157,6 +184,8 @@
   <div class="foot">688 高频词 · 355 词</div>
 </div>
 
+<script src="supabase.js"></script>
+<script src="config.js"></script>
 <script>
 /*CORE-START*/
 const DATA = [{"w":"recipe","ipa":"/'resəpi/","m":"n. 食谱，烹饪法；方法；秘诀"},{"w":"curious","ipa":"/'kjʊriəs/","m":"adj. 好奇的；求知欲强的；奇怪的，不寻常的"},{"w":"distance","ipa":"/'dɪstəns/","m":"n. 远方，遥远；疏远，冷淡；距离，间距"},{"w":"stretch","ipa":"/stretʃ/","m":"vi.&vt. 舒展，伸展；伸出，拉长；延续，绵延 n. 连续的一片；一段时间；伸展"},{"w":"despite","ipa":"/dɪ'spaɪt/","m":"prep. 不管，尽管，任凭，即使"},{"w":"network","ipa":"/'netwɜːrk/","m":"n. 网络；网状系统 vi. 建立工作关系"},{"w":"familiar","ipa":"/fə'mɪliər/","m":"adj. 熟悉的，熟知的"},{"w":"reveal","ipa":"/rɪ'viːl/","m":"vt. 揭露，揭示；泄露，透露；展现，显示"},{"w":"associate","ipa":"/ə'soʊʃieɪt/","m":"vt. 使联系，使关联 vi. 交往"},{"w":"tradition","ipa":"/trə'dɪʃn/","m":"n. 传统"},{"w":"expert","ipa":"/'ekspɜːrt/","m":"n. 专家，行家 adj. 专家的，熟练的，内行的"},{"w":"feature","ipa":"/'fiːtʃər/","m":"n. 特色，特征，特点；专题节目，故事片 vt. 以…为特色"},{"w":"variety","ipa":"/və'raɪəti/","m":"n. 变体，变化；多样化，不同种类；品种"},{"w":"refer","ipa":"/rɪ'fɜːr/","m":"vi. 谈到，提到；指的是；参考；涉及 vt. 查阅"},{"w":"significance","ipa":"/sɪɡ'nɪfɪkəns/","m":"n. 重要性，重要意义"},{"w":"concept","ipa":"/'kɑːnsept/","m":"n. 概念；观念"},{"w":"recent","ipa":"/'riːsnt/","m":"adj. 最近的"},{"w":"significant","ipa":"/sɪɡ'nɪfɪkənt/","m":"adj. 有重大意义的；意味深长的；显著的"},{"w":"edge","ipa":"/edʒ/","m":"n. 边沿，边缘；刀刃，刀口；优势 vi. 徐徐移动"},{"w":"global","ipa":"/'ɡloʊbl/","m":"adj. 全球的，全世界的；总体的，全面的"},{"w":"version","ipa":"/'vɜːrʒn/","m":"n. 变体，变种；版本；描述，说法"},{"w":"technique","ipa":"/tek'niːk/","m":"n. 技术，技巧，技能，工艺"},{"w":"situation","ipa":"/ˌsɪtʃu'eɪʃn/","m":"n. 情况，局面，形势；地理位置"},{"w":"victim","ipa":"/'vɪktɪm/","m":"n. 受害者，牺牲者，牺牲品；患者"},{"w":"maintain","ipa":"/meɪn'teɪn/","m":"vt. 维持；保养，维修；坚持，保持，固执己见；抚养，供养"},{"w":"receptionist","ipa":"/rɪ'sepʃənɪst/","m":"n. 接待员"},{"w":"contain","ipa":"/kən'teɪn/","m":"vt. 包含，含有；容纳；克制，抑制；控制， 防止蔓延"},{"w":"salary","ipa":"/'sæləri/","m":"n. 薪金，薪水"},{"w":"decade","ipa":"/'dekeɪd/","m":"n. 十年，十年期"},{"w":"finger","ipa":"/'fɪŋɡər/","m":"n. 手指 vt. 用手指触摸"},{"w":"roll","ipa":"/roʊl/","m":"vi.&vt. 翻滚，滚动；转动；翻身 vt. 卷起"},{"w":"guidance","ipa":"/'ɡaɪdns/","m":"n. 引导，咨询，指导；导航，制导"},{"w":"advise","ipa":"/əd'vaɪz/","m":"vt. 建议，劝告；通知"},{"w":"grand","ipa":"/ɡrænd/","m":"adj. 宏伟的；壮丽的；大的；主要的；极好的"},{"w":"access","ipa":"/'ækses/","m":"vt. 访问，使用；获取，存取；进入，到达 n. 使用权；通道；机会"},{"w":"immediate","ipa":"/ɪ'miːdiət/","m":"adj. 立即的；迫切的；最接近的"},{"w":"drug","ipa":"/drʌɡ/","m":"n. 药物；毒品"},{"w":"ache","ipa":"/eɪk/","m":"vi. 疼痛；渴望 n. 疼痛"},{"w":"astonish","ipa":"/ə'stɑːnɪʃ/","m":"vt. 使惊讶"},{"w":"crossing","ipa":"/'krɔːsɪŋ/","m":"n. 十字路口；人行横道线 v. 横渡，穿越（cross 的现在分词形式）"},{"w":"visual","ipa":"/'vɪʒuəl/","m":"adj. 视力的，视觉的"},{"w":"flight","ipa":"/flaɪt/","m":"n. 飞行，飞翔；航班，班机；航程；逃避"},{"w":"confuse","ipa":"/kən'fjuːz/","m":"vt. 使困惑，使糊涂；混淆"},{"w":"yard","ipa":"/jɑːrd/","m":"n. 码；院子；场地"},{"w":"private","ipa":"/'praɪvət/","m":"adj. 私有的；私人的，个人的；私立的，民营的；秘密的"},{"w":"feather","ipa":"/'feðər/","m":"n. 羽毛"},{"w":"unconscious","ipa":"/ʌn'kɑːnʃəs/","m":"adj. 不省人事的；未发觉的；无意识的"},{"w":"pioneer","ipa":"/ˌpaɪə'nɪr/","m":"n. 先锋；开拓者 vt. 倡导"},{"w":"resource","ipa":"/rɪˈsɔːrs; ˈriːsɔːrs/","m":"n. 资源，物力；财力"},{"w":"dust","ipa":"/dʌst/","m":"n. 灰尘，尘土；粉末 vi.&vt. 把…撒于；擦去…的灰尘，擦灰"},{"w":"affection","ipa":"/ə'fekʃn/","m":"n. 喜爱，钟爱"},{"w":"gather","ipa":"/'ɡæðər/","m":"vi.&vt. 聚集，集合 vt. 搜集，收割"},{"w":"academy","ipa":"/ə'kædəmi/","m":"n. 学院；研究院；学会；专科学校"},{"w":"control","ipa":"/kən'troʊl/","m":"n. 控制（权）；开关，操纵装置 vt. 控制，操纵；限制，抑制；支配"},{"w":"disappoint","ipa":"/ˌdɪsə'pɔɪnt/","m":"vt. 使失望"},{"w":"suitcase","ipa":"/'suːtkeɪs/","m":"n. 手提箱"},{"w":"commercial","ipa":"/kə'mɜːrʃl/","m":"adj. 商业的，贸易的；以获利为目的的 n. 广告"},{"w":"male","ipa":"/meɪl/","m":"adj. 男性的，雄性的 n. 男子，雄性"},{"w":"scan","ipa":"/skæn/","m":"vt. 浏览，细看；扫描 n. 扫描检查；浏览"},{"w":"bath","ipa":"/bæθ/","m":"n. 浴缸；洗澡，沐浴；洗澡水 vi.&vt. 洗澡"},{"w":"branch","ipa":"/bræntʃ/","m":"n. 分支，分部；支线，支流；树枝"},{"w":"eyesight","ipa":"/'aɪsaɪt/","m":"n. 视力"},{"w":"square","ipa":"/skwer/","m":"adj. 正方形的；平方的 n. 正方形；广场；平方"},{"w":"metal","ipa":"/'metl/","m":"n. 金属"},{"w":"awkward","ipa":"/'ɔːkwərd/","m":"adj. 尴尬的；笨拙的；不舒适的；难对付的"},{"w":"advantage","ipa":"/əd'væntɪdʒ/","m":"n. 优势；优点；有利条件 phrase. （take advantage of）充分利用， 占便宜"},{"w":"disadvantage","ipa":"/ˌdɪsəd'væntɪdʒ/","m":"n. 不利条件，劣势"},{"w":"seed","ipa":"/siːd/","m":"n. 籽，种子；种子选手；开端，起源，萌芽 vt. 在…播种"},{"w":"assistance","ipa":"/ə'sɪstəns/","m":"n. 协助，援助，帮助"},{"w":"necessary","ipa":"/'nesəseri/","m":"adj. 必要的，必需的，必然的"},{"w":"memory","ipa":"/'meməri/","m":"n. 记忆力，记性；记忆，回忆；内存"},{"w":"complete","ipa":"/kəm'pliːt/","m":"adj. 全部的，彻底的，完整的 vt. 完成，使完整；填写"},{"w":"anger","ipa":"/'æŋɡər/","m":"n. 愤怒，怒气 vt. 使生气，激怒"},{"w":"enemy","ipa":"/'enəmi/","m":"n. 敌人，仇敌；反对者"},{"w":"ripe","ipa":"/raɪp/","m":"adj. 成熟的；时机成熟的"},{"w":"invitation","ipa":"/ˌɪnvɪ'teɪʃn/","m":"n. 邀请；请帖；招致"},{"w":"division","ipa":"/dɪ'vɪʒn/","m":"n. 分开，分隔；部门；除法；分歧，差异； 分界线；分配"},{"w":"rise","ipa":"/raɪz/","m":"vi. 上升，增加；起床；升起 n. 上升，增强；兴起；斜坡，小山"},{"w":"average","ipa":"/'ævərɪdʒ/","m":"adj. 普通的，正常的；平均的 n. 平均数；平均水平"},{"w":"effect","ipa":"/ɪ'fekt/","m":"n. 效果，作用；影响；所有物 vt. 使发生，引起"},{"w":"prejudice","ipa":"/ˈpredʒədɪs/","m":"n. 偏见，成见"},{"w":"spiritual","ipa":"/'spɪrɪtʃuəl/","m":"adj. 精神的，心灵的；宗教的"},{"w":"throughout","ipa":"/θruː'aʊt/","m":"prep. 自始至终；遍及，各处"},{"w":"valley","ipa":"/'væli/","m":"n. 山谷，溪谷"},{"w":"container","ipa":"/kən'teɪnər/","m":"n. 容器；集装箱，货柜"},{"w":"level","ipa":"/'levl/","m":"n. 程度；水平；层次；楼层；级别"},{"w":"opportunity","ipa":"/ˌɑːpər'tuːnəti/","m":"n. 机会；时机"},{"w":"comfortable","ipa":"/'kʌmftəbl/","m":"adj. 舒适的，舒服的，自在的，安逸的；宽裕的"},{"w":"blame","ipa":"/bleɪm/","m":"vt. 责备，责怪 n. 责备，指责；责任"},{"w":"wax","ipa":"/wæks/","m":"n. 蜡；耳垢"},{"w":"tough","ipa":"/tʌf/","m":"adj. 艰苦的，艰难的；严厉的；坚强的；健壮的，坚固的；粗暴的；棘手的"},{"w":"series","ipa":"/'sɪriːz/","m":"n. 连续，接连；一系列；系列比赛，系列节目"},{"w":"aim","ipa":"/eɪm/","m":"n. 目标，目的；瞄准 vi.&vt. 力求达到；旨在，目的是；瞄准，对准"},{"w":"electric","ipa":"/ɪ'lektrɪk/","m":"adj. 电的，电动的；令人激动的"},{"w":"rate","ipa":"/reɪt/","m":"n. 速度；比率；价格，费用；进度；率 vt. 评估，评价；划分等级"},{"w":"indicate","ipa":"/'ɪndɪkeɪt/","m":"vt. 表明，指出，显示；暗示，象征"},{"w":"scene","ipa":"/siːn/","m":"n. 现场；场景，场面，情景；景色；镜头； 圈子；片段；活动领域"},{"w":"independent","ipa":"/ˌɪndɪ'pendənt/","m":"adj. 独立的，自主的；公正的"},{"w":"intelligence","ipa":"/ɪn'telɪdʒəns/","m":"n. 智力，智慧，才智；情报"},{"w":"brand","ipa":"/brænd/","m":"n. 品牌；类型"},{"w":"flash","ipa":"/flæʃ/","m":"n. 闪光，闪耀；闪现；突发；闪光灯 vi.&vt. 闪光，闪耀；闪现"},{"w":"collection","ipa":"/kə'lekʃn/","m":"n. 聚集，收集；收藏；作品集，收藏集；一堆，一群"},{"w":"motor","ipa":"/'moʊtər/","m":"n. 发动机，马达；汽车 adj. 有引擎的，机动车的"},{"w":"event","ipa":"/ɪ'vent/","m":"n. 重大事件；公开活动；比赛项目"},{"w":"rely","ipa":"/rɪ'laɪ/","m":"vi. 依靠，依赖；信任，信赖"},{"w":"attract","ipa":"/ə'trækt/","m":"vt. 吸引；引起"},{"w":"challenge","ipa":"/'tʃælɪndʒ/","m":"n. 挑战，艰巨任务；质疑 vt. 发起挑战；提出质疑"},{"w":"district","ipa":"/'dɪstrɪkt/","m":"n. 地区，区域；行政区"},{"w":"facility","ipa":"/fə'sɪləti/","m":"n. 设施，设备，特别装置；场所；天资"},{"w":"range","ipa":"/reɪndʒ/","m":"n. 一系列；范围，距离；山脉 vi. 变动，变化；包括；徘徊，漫步，四处移动"},{"w":"potential","ipa":"/pə'tenʃl/","m":"adj. 潜在的，可能的 n. 可能性；潜力，潜质"},{"w":"engineer","ipa":"/ˌendʒɪ'nɪr/","m":"n. 工程师，机械师，技师 vt. 设计制造；密谋策划"},{"w":"location","ipa":"/loʊ'keɪʃn/","m":"n. 位置；地点，地方"},{"w":"offer","ipa":"/'ɔːfər/","m":"vt. 提供，供应；提出；出价 n. 提议；录取通知书；出价，报价"},{"w":"wander","ipa":"/'wɑːndər/","m":"vi.&vt. 漫步，漫游，闲逛；偏离，走失 vi. 走神"},{"w":"alcohol","ipa":"/'ælkəhɔːl/","m":"n. 酒；酒精，乙醇"},{"w":"survey","ipa":"/'sɜːrveɪ/","m":"n. 民意调查；勘测，测量；概述 vt. 调查；审视，查看；概述；勘测，测量"},{"w":"waiter","ipa":"/'weɪtər/","m":"n. （男）服务员"},{"w":"explore","ipa":"/ɪk'splɔːr/","m":"vi.&vt. 探索，探究，探讨；探测，勘查"},{"w":"silk","ipa":"/sɪlk/","m":"n. 丝，丝线，丝绸"},{"w":"carrot","ipa":"/'kærət/","m":"n. 胡萝卜"},{"w":"invest","ipa":"/ɪn'vest/","m":"vi.&vt. 投资 vt. 投入"},{"w":"government","ipa":"/'ɡʌvərnmənt/","m":"n. 政府，政体；统治"},{"w":"discover","ipa":"/dɪ'skʌvər/","m":"vt. 发现，找到；发觉，了解到"},{"w":"spoon","ipa":"/spuːn/","m":"n. 匙，勺，调羹 vt. 用勺舀"},{"w":"entire","ipa":"/ɪn'taɪər/","m":"adj. 整个的，全部的；完全的"},{"w":"announce","ipa":"/ə'naʊns/","m":"vt. 宣布，通知；声称"},{"w":"code","ipa":"/kəʊd/","m":"n. 密码；代码；编号；法典；道德准则 vt. 为…编码；写代码"},{"w":"divide","ipa":"/dɪ'vaɪd/","m":"vt. 分隔；分配，分担；除以 vi.&vt. 分割，分开"},{"w":"tiny","ipa":"/'taɪni/","m":"adj. 极小的，细微的"},{"w":"instance","ipa":"/'ɪnstəns/","m":"n. 例子，示例"},{"w":"success","ipa":"/sək'ses/","m":"n. 成功，成就，胜利"},{"w":"update","ipa":"/ˌʌp'deɪt/","m":"n. 更新；最新消息 vt. 使现代化；向…提供最新信息"},{"w":"modern","ipa":"/'mɑːdərn/","m":"adj. 现代的，现代化的；时髦的，新式的"},{"w":"asleep","ipa":"/ə'sliːp/","m":"adj. 睡着的"},{"w":"common","ipa":"/'kɑːmən/","m":"adj. 常见的，普遍的，普通的；共有的，共同的"},{"w":"bored","ipa":"/bɔːrd/","m":"adj. 无聊的，厌倦的"},{"w":"centigrade","ipa":"/'sentɪɡreɪd/","m":"adj. 摄氏的 n. 摄氏度"},{"w":"hire","ipa":"/'haɪər/","m":"vt. 租用，租借；雇用，录用 n. 租用"},{"w":"quarter","ipa":"/'kwɔːrtər/","m":"n. 一刻钟；四分之一；（城镇的）区；季度；营房，宿舍"},{"w":"moment","ipa":"/'moʊmənt/","m":"n. 片刻，瞬间；时光，时机；某一时刻"},{"w":"succeed","ipa":"/sək'siːd/","m":"vi. 成功；办到，达到目的 vt. 接替，继任"},{"w":"disabled","ipa":"/dɪs'eɪbld/","m":"adj. 有残疾的；丧失能力的"},{"w":"specific","ipa":"/spə'sɪfɪk/","m":"adj. 具体的，明确的；特有的，独特的"},{"w":"stuff","ipa":"/stʌf/","m":"n. 物品；事情 vt. 填满，塞满"},{"w":"model","ipa":"/'mɑːdl/","m":"n. 模型；模范，典型；模特；型号 vt. 以…为榜样"},{"w":"profit","ipa":"/'prɑːfɪt/","m":"n. 利润；益处；利益"},{"w":"bottom","ipa":"/'bɑːtəm/","m":"n. 底部，底面；尽头；排名最后的人 adj. 底部的"},{"w":"none","ipa":"/nʌn/","m":"pron. 没有一个；绝无"},{"w":"pilot","ipa":"/'paɪlət/","m":"n. 飞行员；领航员 adj. 试验性的，试点的"},{"w":"corn","ipa":"/kɔːrn/","m":"n. 玉米；谷物，谷粒"},{"w":"relate","ipa":"/rɪ'leɪt/","m":"vt. 联系，使有联系；讲述"},{"w":"neighbourhood","ipa":"/'neɪbərhʊd/","m":"n. 社区，街区，街坊；附近的地方"},{"w":"fee","ipa":"/fiː/","m":"n. 费，费用；报酬"},{"w":"injure","ipa":"/'ɪndʒər/","m":"vt. 伤害；损害"},{"w":"selfish","ipa":"/'selfɪʃ/","m":"adj. 自私的"},{"w":"chess","ipa":"/tʃes/","m":"n. 国际象棋"},{"w":"brief","ipa":"/briːf/","m":"adj. 简短的，简洁的；短暂的 n. 任务简介，指示"},{"w":"cure","ipa":"/kjʊr/","m":"n. 治愈，治疗；措施；药物，疗法 vt. 治疗，治愈；解决；矫正"},{"w":"adjust","ipa":"/ə'dʒʌst/","m":"vi.&vt. 调节，调整；适应，习惯"},{"w":"evaluate","ipa":"/ɪ'væljueɪt/","m":"vt. 评估，评价；估计"},{"w":"regulation","ipa":"/ˌreɡju'leɪʃn/","m":"n. 规章制度，规则；管理，控制"},{"w":"aggressive","ipa":"/ə'ɡresɪv/","m":"adj. 好斗的，侵略性的"},{"w":"able","ipa":"/'eɪbl/","m":"adj. 能，能够，有能力的"},{"w":"native","ipa":"/'neɪtɪv/","m":"adj. 本土的，出生地的；天生的；土著的，本地的 n. 本地人，土著"},{"w":"dive","ipa":"/daɪv/","m":"vi. 潜水；跳水；俯冲 n. 潜水；跳水；俯冲"},{"w":"airport","ipa":"/'erpɔːrt/","m":"n. 机场，航空站"},{"w":"reply","ipa":"/rɪ'plaɪ/","m":"vi. 对…做出反应 vi.&vt. 对…做出回答"},{"w":"breathe","ipa":"/briːð/","m":"vi.&vt. 呼吸，呼出"},{"w":"knowledge","ipa":"/'nɑːlɪdʒ/","m":"n. 知识，学问；知晓"},{"w":"state","ipa":"/steɪt/","m":"n. 状态；州；国家 vt. 陈述，说明"},{"w":"benefit","ipa":"/'benɪfɪt/","m":"n. 好处，益处；津贴，福利；保险金；帮助；优势；慈善活动 vi.&vt. 有利于，使…受益"},{"w":"ballet","ipa":"/'bæleɪ/","m":"n. 芭蕾舞，芭蕾舞团"},{"w":"website","ipa":"/'websaɪt/","m":"n. 网站"},{"w":"adolescence","ipa":"/ˌædə'lesns/","m":"n. 青春期"},{"w":"host","ipa":"/hoʊst/","m":"n. 主人；主持人；宿主；东道主 vt. 做东；主办；主持"},{"w":"scholarship","ipa":"/'skɑːlərʃɪp/","m":"n. 奖学金；学术研究，学问"},{"w":"patience","ipa":"/'peɪʃns/","m":"n. 耐心；忍耐（力），毅力"},{"w":"confident","ipa":"/ˈkɑːnfɪdənt/","m":"adj. 有信心的，自信的，确信的"},{"w":"carpenter","ipa":"/'kɑːrpəntər/","m":"n. 木匠"},{"w":"forever","ipa":"/fər'evər/","m":"adv. 永远，老是，长久地"},{"w":"emotion","ipa":"/ɪ'moʊʃn/","m":"n. 感情，情感；情绪；激情"},{"w":"expectation","ipa":"/ˌekspek'teɪʃn/","m":"n. 预期，预料；期望，盼望"},{"w":"recommend","ipa":"/ˌrekə'mend/","m":"vt. 推荐，建议，劝告；介绍；使受欢迎"},{"w":"painful","ipa":"/'peɪnfl/","m":"adj. 疼痛的；艰难的"},{"w":"motivation","ipa":"/ˌməʊtɪ'veɪʃn/","m":"n. 动力，动机；积极性"},{"w":"solution","ipa":"/sə'luːʃn/","m":"n. 解决方法；答案，谜底；溶解；溶液"},{"w":"deliver","ipa":"/dɪ'lɪvər/","m":"vi.&vt. 传达；递送，传送 vt. 发表；分娩，助产"},{"w":"achievement","ipa":"/ə'tʃiːvmənt/","m":"n. 成就，成绩；完成，达到"},{"w":"security","ipa":"/sɪˈkjʊrəti/","m":"n. 安全；安全措施；安保部门；证券；担保，抵押品"},{"w":"settle","ipa":"/'setl/","m":"vi.&vt. 定居，停留；沉降；和解；安排好 vt. 解决；使处于舒适的位置；结束"},{"w":"damage","ipa":"/'dæmɪdʒ/","m":"n. 损害，伤害，损失；损害赔偿金 vt. 损害，伤害，毁坏，破坏"},{"w":"respond","ipa":"/rɪ'spɑːnd/","m":"vt. 回应，回答 vi. 做出反应"},{"w":"strength","ipa":"/streŋθ/","m":"n. 力量，力气；优势，优点；强度；实力； 毅力，体力"},{"w":"argue","ipa":"/'ɑːrɡjuː/","m":"vi. 争辩，争论 vt. 表明，论证，证明；辩论"},{"w":"alongside","ipa":"/əˌlɔːŋ'saɪd/","m":"prep. 在...旁边；与...一起；同时 adv. 在旁边"},{"w":"object","ipa":"/ˈɑːbdʒekt; əbˈdʒekt/","m":"n. 物体；目标，目的；宾语；对象 vt. 反对，不赞成"},{"w":"couple","ipa":"/'kʌpl/","m":"n. 夫妇，情侣；几个 vt. 加上，结合"},{"w":"mobile","ipa":"/ˈmoʊbəl/","m":"adj. 可移动的；流动的；多变的；行动方便的 n. 手机；可动物件"},{"w":"presentation","ipa":"/ˌpriːznˈteɪʃn/","m":"n. 报告，陈述；出示；授予，颁发；提交； 展示会"},{"w":"applicant","ipa":"/'æplɪkənt/","m":"n. 申请者"},{"w":"regular","ipa":"/'reɡjələr/","m":"adj. 经常的；有规律的，规则的；固定的，定期的 n. 常客"},{"w":"inspire","ipa":"/ɪn'spaɪər/","m":"vt. 鼓舞，激励；启发，赐予灵感"},{"w":"invite","ipa":"/ɪn'vaɪt/","m":"vt. 邀请，请求；招致 n. 邀请，请帖"},{"w":"flow","ipa":"/floʊ/","m":"vi. 流动；大量供应；涨潮；流畅 n. 流畅；流动；不断供应"},{"w":"spirit","ipa":"/'spɪrɪt/","m":"n. 灵魂；精神"},{"w":"decision","ipa":"/dɪ'sɪʒn/","m":"n. 决定"},{"w":"certain","ipa":"/ˈsɜːrtn/","m":"adj. 确定的，确信的，肯定的；某种"},{"w":"peace","ipa":"/piːs/","m":"n. 和平，和睦；宁静，平静"},{"w":"prove","ipa":"/pruːv/","m":"vt. 证明，证实；展现，展示"},{"w":"excuse","ipa":"/ɪk'skjuːs/","m":"n. 借口，理由；辩解 vt. 原谅；找理由；准许离开"},{"w":"impact","ipa":"/'ɪmpækt/","m":"n. 冲击，撞击；影响；作用 vi.&vt. 冲击，撞击；有影响"},{"w":"pull","ipa":"/pʊl/","m":"vi.&vt. 拉，拖；拔出 n. 拉；引力"},{"w":"adopt","ipa":"/ə'dɑːpt/","m":"vt. 采用，正式通过 vi.&vt. 收养，领养"},{"w":"least","ipa":"/liːst/","m":"adj. 最少的；最小的 adv. 最小；最少"},{"w":"construction","ipa":"/kən'strʌkʃn/","m":"n. 建造，建筑；建筑物；结构"},{"w":"tremble","ipa":"/'trembl/","m":"vi. 颤抖，发抖 n. 颤抖，发抖"},{"w":"immediately","ipa":"/ɪ'miːdiətli/","m":"adv. 立即，马上"},{"w":"basket","ipa":"/'bæskɪt/","m":"n. 篮子；一篮，一筐"},{"w":"hunter","ipa":"/'hʌntər/","m":"n. 猎人，狩猎者"},{"w":"flour","ipa":"/'flaʊər/","m":"n. 面粉 vt. 在…上撒面粉"},{"w":"disease","ipa":"/dɪ'ziːz/","m":"n. 病，疾病；弊端"},{"w":"imagine","ipa":"/ɪ'mædʒɪn/","m":"vt. 想象；设想，料想，猜测"},{"w":"extreme","ipa":"/ɪk'striːm/","m":"adj. 极端的，极度的；严重的；尽头的，末端的；极限的 n. 极度，极端"},{"w":"spell","ipa":"/spel/","m":"vt. 拼写，拼出 n. 咒语，魔法"},{"w":"burden","ipa":"/'bɜːrdn/","m":"n. 重负；责任"},{"w":"afterwards","ipa":"/'æftərwərdz/","m":"adv. 后来，以后"},{"w":"arrangement","ipa":"/ə'reɪndʒmənt/","m":"n. 安排；布置；商定，约定"},{"w":"aside","ipa":"/ə'saɪd/","m":"adv. 在旁边，到旁边；存，留；除…以外"},{"w":"discovery","ipa":"/dɪ'skʌvəri/","m":"n. 发现，发觉"},{"w":"sort","ipa":"/sɔːrt/","m":"n. 种类，类别，品种；排序；分类 vi.&vt. 分类，整理；妥善处理"},{"w":"vocabulary","ipa":"/və'kæbjəleri/","m":"n. 词汇；词汇量；词汇表"},{"w":"album","ipa":"/'ælbəm/","m":"n. 专辑；集邮册；相册"},{"w":"admission","ipa":"/əd'mɪʃn/","m":"n. 准入，入学；承认；入场费"},{"w":"energetic","ipa":"/ˌenər'dʒetɪk/","m":"adj. 精力充沛的，充满活力的；积极的"},{"w":"geography","ipa":"/dʒi'ɑːɡrəfi/","m":"n. 地貌；地理学"},{"w":"consist","ipa":"/kən'sɪst/","m":"vi. 组成，构成；存在于"},{"w":"sheet","ipa":"/ʃiːt/","m":"n. 被单，床单；一张，一大片；薄片"},{"w":"marry","ipa":"/'mæri/","m":"vi.&vt. 嫁，娶，结婚 vt. 紧密联合"},{"w":"piece","ipa":"/piːs/","m":"n. 块，片；碎片；零部件；一件；篇；棋子；（艺术、音乐、戏剧等）一部作品；条， 项，点 phrase. （piece of cake）轻而易举"},{"w":"encourage","ipa":"/ɪn'kɜːrɪdʒ/","m":"vt. 劝告；鼓励，激励，鼓动；促进，刺激， 助长"},{"w":"budget","ipa":"/'bʌdʒɪt/","m":"n. 预算 vi.&vt. 把…编入预算"},{"w":"treat","ipa":"/triːt/","m":"vt. 招待，款待；治疗，医治；对待，处理 n. 款待；甜食"},{"w":"evident","ipa":"/'evɪdənt/","m":"adj. 明显的，显然的，清楚的"},{"w":"policy","ipa":"/'pɑːləsi/","m":"n. 政策，方针；原则"},{"w":"affair","ipa":"/ə'fer/","m":"n. 事情，事件，公共事务"},{"w":"merely","ipa":"/'mɪrli/","m":"adv. 仅仅，只，不过"},{"w":"damp","ipa":"/dæmp/","m":"adj. 潮湿的，湿气重的 n. 潮湿，湿气"},{"w":"grey","ipa":"/ɡreɪ/","m":"n. 灰色 adj. 苍白的；阴郁的"},{"w":"appointment","ipa":"/ə'pɔɪntmənt/","m":"n. 约定；约会；任命，委任；预约；职位， 职务"},{"w":"delay","ipa":"/dɪ'leɪ/","m":"n. 耽搁，拖延，推迟 vi.&vt. 耽搁，拖延，推迟"},{"w":"oral","ipa":"/'ɔːrəl/","m":"adj. 口腔的；口头的，口述的 n. 口试"},{"w":"disability","ipa":"/ˌdɪsə'bɪləti/","m":"n. 障碍；残疾；缺陷"},{"w":"vase","ipa":"/veɪs; veɪz/","m":"n. 花瓶，装饰瓶"},{"w":"peach","ipa":"/piːtʃ/","m":"n. 桃子；桃树；桃红色"},{"w":"carrier","ipa":"/'kæriər/","m":"n. 运输人，携带者；运输工具；运输公司； 通讯公司"},{"w":"field","ipa":"/fiːld/","m":"n. 田地；领域；学科；运动场；野外；战场 vt. 组建，派出"},{"w":"award","ipa":"/ə'wɔːrd/","m":"n. 奖，奖品，奖金，奖状 vt. 奖励，授予；判给"},{"w":"imagination","ipa":"/ɪˌmædʒɪ'neɪʃn/","m":"n. 想象，幻想；想象力，创造力；幻想物"},{"w":"means","ipa":"/miːnz/","m":"n. 方法，手段，途径；财富，钱财 phrase. （by no means）一点也不"},{"w":"civil","ipa":"/'sɪvl/","m":"adj. 公民的，国民的；民用的，民事的；有礼貌的"},{"w":"vehicle","ipa":"/ˈviːəkl/","m":"n. 车辆，交通工具；手段，工具"},{"w":"coincidence","ipa":"/koʊ'ɪnsɪdəns/","m":"n. 巧合，碰巧"},{"w":"demand","ipa":"/dɪ'mænd/","m":"vt. 需要；强烈要求 n. 要求；需要，所需之物"},{"w":"contribution","ipa":"/ˌkɑːntrɪ'bjuːʃn/","m":"n. 贡献；捐款"},{"w":"theft","ipa":"/θeft/","m":"n. 盗窃，偷窃；盗窃罪"},{"w":"extra","ipa":"/'ekstrə/","m":"adj. 额外的，外加的 adv. 另外，格外，特别"},{"w":"switch","ipa":"/swɪtʃ/","m":"n. 开关，电闸；转变，突变 vi.&vt. 转换，转变，改变；调班"},{"w":"belt","ipa":"/belt/","m":"n. 腰带，皮带；传送带；地带"},{"w":"alternative","ipa":"/ɔːl'tɜːrnətɪv/","m":"adj. 可供选择的，可供替代的；另类的，非传统的 n. 可供选择的事物"},{"w":"suck","ipa":"/sʌk/","m":"vi.&vt. 吸吮；卷入"},{"w":"mix","ipa":"/mɪks/","m":"vi.&vt. 混合，融合；混淆，弄混；掺和，调配 n. 混合；混合配料"},{"w":"union","ipa":"/'juːniən/","m":"n. 协会，工会；联合"},{"w":"overall","ipa":"/ˌoʊvər'ɔːl/","m":"adj. 总体的，全面的，综合的 adv. 一般来说，大致上；全部"},{"w":"coast","ipa":"/koʊst/","m":"n. 海岸，海滨"},{"w":"personnel","ipa":"/ˌpɜːrsə'nel/","m":"n. 全体人员；人事部门"},{"w":"contemporary","ipa":"/kən'tempəreri/","m":"adj. 当代的，现代的；同时代的 n. 同代人，同辈人，同龄人"},{"w":"skip","ipa":"/skɪp/","m":"vi.&vt. 跳过，略过 vt. 不做，不参加；悄悄溜走；跳绳"},{"w":"clone","ipa":"/kloʊn/","m":"vt. 克隆，以无性繁殖技术复制 n. 翻版；克隆（动物或植物）"},{"w":"combine","ipa":"/kəm'baɪn/","m":"vi.&vt. 组合，结合；化合，混合 vt. 兼备；兼做"},{"w":"absent","ipa":"/'æbsənt/","m":"adj. 不在的，缺席的；心不在焉的 vi. 不参加，不在，缺席"},{"w":"wonder","ipa":"/'wʌndər/","m":"n. 惊奇，惊异，惊讶；奇迹，奇事，奇观； 能人，奇才 vi.&vt. 想知道；对…感到诧异"},{"w":"forecast","ipa":"/'fɔːrkæst/","m":"n. 预测，预报 vt. 预测，预报"},{"w":"equip","ipa":"/ɪ'kwɪp/","m":"vt. 装备，配备"},{"w":"major","ipa":"/'meɪdʒər/","m":"adj. 主要的，重要的，严重的；主修的；大的 n. 主修课程；主修学生"},{"w":"choice","ipa":"/tʃɔɪs/","m":"n. 选择，选择权"},{"w":"tip","ipa":"/tɪp/","m":"n. 顶端，尖端；忠告；小费；提示，诀窍 vt. 给小费；倒出，倾倒"},{"w":"disturbing","ipa":"/dɪ'stɜːrbɪŋ/","m":"adj. 烦恼的，令人不安的"},{"w":"license","ipa":"/'laɪsns/","m":"n. 执照，许可证；批准，许可"},{"w":"historic","ipa":"/hɪ'stɔːrɪk/","m":"adj. 历史上著名的；历史的"},{"w":"thus","ipa":"/ðʌs/","m":"adv. 因此，因而"},{"w":"communicate","ipa":"/kə'mjuːnɪkeɪt/","m":"vi.&vt. 交流，沟通，表达 vt. 传播，传达；传染"},{"w":"ability","ipa":"/ə'bɪləti/","m":"n. 能力，才能"},{"w":"instant","ipa":"/'ɪnstənt/","m":"adj. 立刻的，即时的 n. 瞬间，片刻"},{"w":"description","ipa":"/dɪ'skrɪpʃn/","m":"n. 描述，形容，描写，说明"},{"w":"trade","ipa":"/treɪd/","m":"n. 贸易，交易；职业，行业 vt. 用…进行交换"},{"w":"information","ipa":"/ˌɪnfər'meɪʃn/","m":"n. 信息，资料，消息"},{"w":"role","ipa":"/roʊl/","m":"n. 作用；角色；职能；地位"},{"w":"lively","ipa":"/'laɪvli/","m":"adj. 活泼的；生气勃勃的，生动有趣的；鲜艳的"},{"w":"electronic","ipa":"/ɪˌlek'trɑːnɪk/","m":"adj. 电子的，电子设备的"},{"w":"border","ipa":"/'bɔːrdər/","m":"n. 边界；国界 vt. 与…接壤"},{"w":"tunnel","ipa":"/'tʌnl/","m":"n. 隧道，地道"},{"w":"environment","ipa":"/ɪn'vaɪrənmənt/","m":"n. 环境"},{"w":"assume","ipa":"/ə'suːm/","m":"vt. 假设，假定；认为；取得；就职；显露； 承担"},{"w":"folk","ipa":"/foʊk/","m":"adj. 民间的，民俗的 n. 人们；民间音乐"},{"w":"greengrocer","ipa":"/'ɡriːnɡroʊsər/","m":"n. 果菜商"},{"w":"stamp","ipa":"/stæmp/","m":"n. 印记；印章；邮票"},{"w":"citizen","ipa":"/'sɪtɪzn/","m":"n. 市民，居民， 公民"},{"w":"occasion","ipa":"/ə'keɪʒn/","m":"n. 场合；时机，机会；时节，时刻；盛会， 特别的事情"},{"w":"digital","ipa":"/'dɪdʒɪtl/","m":"adj. 数字的；数码的"},{"w":"beach","ipa":"/biːtʃ/","m":"n. 海滩，沙滩，海滨"},{"w":"service","ipa":"/'sɜːrvɪs/","m":"n. 服务；公共事业；维修，保养"},{"w":"pine","ipa":"/paɪn/","m":"n. 松树，松木"},{"w":"throw","ipa":"/θroʊ/","m":"vt. 扔，抛，投，掷；使劲撞；猛推 n. （沙发的）套，罩"},{"w":"paint","ipa":"/peɪnt/","m":"vt. 绘画；给…涂色 vi.&vt. 在…上刷油漆"},{"w":"pancake","ipa":"/'pænkeɪk/","m":"n. 薄煎饼"},{"w":"disappear","ipa":"/ˌdɪsə'pɪr/","m":"vi. 消失，不见，不复存在；灭绝，消亡；失踪"},{"w":"master","ipa":"/'mæstər/","m":"n. 高手，能手；硕士；主人，雇主；大师 vt. 掌握，精通"},{"w":"allow","ipa":"/ə'laʊ/","m":"vt. 允许，准许；承认，接受；留出"},{"w":"medical","ipa":"/'medɪkl/","m":"adj. 医学的；医疗的"},{"w":"neat","ipa":"/niːt/","m":"adj. 整洁的，整齐的，有条理的；小巧优雅的；极好的"},{"w":"ample","ipa":"/'æmpl/","m":"adj. 足够的，丰富的"},{"w":"mild","ipa":"/maɪld/","m":"adj. 和善的，温和的；不严重的，轻微的；不浓的，淡味的"},{"w":"cell","ipa":"/sel/","m":"n. 细胞；小房间；单间牢房；手机；电池； 气团，单体"},{"w":"fur","ipa":"/fɜːr/","m":"n. 毛皮，软毛"},{"w":"method","ipa":"/'meθəd/","m":"n. 方法，办法"},{"w":"political","ipa":"/pə'lɪtɪkl/","m":"adj. 政治的，政府的"},{"w":"adolescent","ipa":"/ˌædə'lesnt/","m":"adj. 青春期的 n. 青少年"},{"w":"fist","ipa":"/fɪst/","m":"n. 拳头"},{"w":"freezing","ipa":"/'friːzɪŋ/","m":"adj. 冰冻的，极冷的"},{"w":"tour","ipa":"/tʊr/","m":"n. 旅游，观光；参观；巡回演出 vi.&vt. 巡回演出；旅游"},{"w":"polite","ipa":"/pə'laɪt/","m":"adj. 有礼貌的，客气的，礼节性的"},{"w":"timetable","ipa":"/'taɪmteɪbl/","m":"n. 时间表；课程表"},{"w":"academic","ipa":"/ˌækə'demɪk/","m":"adj. 学习良好的；学术的，教学的 n. 学者；大学教师"},{"w":"hesitate","ipa":"/'hezɪteɪt/","m":"vi.&vt. 犹豫，疑虑，迟疑不决"},{"w":"urge","ipa":"/ɜːrdʒ/","m":"vt. 敦促，鞭策；恳求；力劝，竭力主张 n. 强烈的欲望，冲动"},{"w":"bush","ipa":"/bʊʃ/","m":"n. 灌木，灌木丛"},{"w":"step","ipa":"/step/","m":"n. 脚步；步骤；阶段；台阶 vi. 踏，踩；迈步，行走"},{"w":"origin","ipa":"/'ɔːrɪdʒɪn/","m":"n. 起源，起因；出身，血统"},{"w":"graduation","ipa":"/ˌɡrædʒu'eɪʃn/","m":"n. 毕业；毕业典礼"},{"w":"majority","ipa":"/mə'dʒɔːrəti/","m":"n. 多数，大多数；多数票"},{"w":"outcome","ipa":"/'aʊtkʌm/","m":"n. 结果，效果"},{"w":"lorry","ipa":"/'lɔːri/","m":"n. 卡车"},{"w":"educate","ipa":"/'edʒukeɪt/","m":"vt. 教育，教导，训练"},{"w":"barrier","ipa":"/'bæriər/","m":"n. 障碍，屏障，隔阂；关卡"},{"w":"dinosaur","ipa":"/'daɪnəsɔːr/","m":"n. 恐龙"},{"w":"requirement","ipa":"/rɪ'kwaɪərmənt/","m":"n. 必要条件；必需品；要求"},{"w":"valuable","ipa":"/'væljuəbl/","m":"adj. 宝贵的，贵重的，值钱的，有价值的"},{"w":"widespread","ipa":"/'waɪdspred/","m":"adj. 普遍的，广泛的，分布广的"},{"w":"possibility","ipa":"/ˌpɑːsə'bɪləti/","m":"n. 可能性"},{"w":"overcoat","ipa":"/'oʊvərkoʊt/","m":"n. 大衣"},{"w":"acknowledge","ipa":"/ək'nɑːlɪdʒ/","m":"vt. 承认；感谢"},{"w":"dull","ipa":"/dʌl/","m":"adj. 枯燥的，乏味的，单调的"},{"w":"hug","ipa":"/hʌɡ/","m":"n. 拥抱，抱住 vt. 拥抱，抱住"},{"w":"festival","ipa":"/'festɪvl/","m":"n. 节日；会演"}];
@@ -220,9 +249,16 @@ function buildQuiz(){
 }
 /*CORE-END*/
 
-const S = { qs: [], idx: 0, ans: [] };
+const S = { qs: [], idx: 0, ans: [], meta: null, submitted: false };
 const $ = id => document.getElementById(id);
 const KEYS = ['A','B','C','D'];
+const CFG = window.WORD_CHECK_CONFIG || {};
+const NAME_KEY = 'wc_stu_name', CLASS_KEY = 'wc_stu_class';
+
+function uid(){
+  if(window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
 
 function show(id){
   document.querySelectorAll('.screen').forEach(el => el.classList.toggle('active', el.id === id));
@@ -230,7 +266,24 @@ function show(id){
 }
 
 function startQuiz(){
+  const nameEl = $('stuName'), clsEl = $('stuClass');
+  const name = nameEl.value.trim().slice(0, 20);
+  const klass = clsEl.value.trim().slice(0, 20);
+  if(!name){
+    $('formErr').hidden = false;
+    nameEl.focus();
+    return;
+  }
+  $('formErr').hidden = true;
+  try {
+    localStorage.setItem(NAME_KEY, name);
+    localStorage.setItem(CLASS_KEY, klass);
+  } catch(e){}
+
+  S.meta = { name, klass, startedAt: new Date().toISOString(), subId: uid() };
+  S.submitted = false;
   S.qs = buildQuiz(); S.idx = 0; S.ans = new Array(S.qs.length).fill(null);
+  $('submitNote').textContent = '';
   show('s-quiz'); render();
 }
 
@@ -279,9 +332,11 @@ function finish(){
   let right = 0;
   const pol = $('polaroid'); pol.innerHTML = '';
   const items = [];
+  const detail = [];
   S.qs.forEach((q, i) => {
     const ok = S.ans[i] === q.answer;
     if(ok) right++;
+    detail.push({ type: q.type, word: q.word.w, mean: q.word.m, answer: q.answer, picked: S.ans[i], ok });
     const d = document.createElement('i');
     d.className = 'dot' + (ok ? '' : ' bad');
     pol.appendChild(d);
@@ -312,11 +367,73 @@ function finish(){
     box.innerHTML = html;
   }
   show('s-result');
+  submitResult(right, detail);
+}
+
+let dbClient = null;
+function getClient(){
+  if(!window.supabase || typeof window.supabase.createClient !== 'function') throw new Error('SDK 未加载');
+  if(!dbClient) dbClient = window.supabase.createClient(CFG.url, CFG.anonKey);
+  return dbClient;
+}
+
+async function submitResult(score, detail){
+  const note = $('submitNote');
+  const meta = S.meta;
+  if(!meta || S.submitted) return;
+  if(!CFG.url || !CFG.anonKey){
+    note.className = 'submit-note';
+    note.textContent = '本地预览：未连接统计后台，本次成绩不会上传。';
+    return;
+  }
+
+  const payload = {
+    sub_id: meta.subId,
+    name: meta.name,
+    klass: meta.klass || '',
+    quiz: 'weekly',
+    score,
+    total: S.qs.length,
+    duration_ms: Math.max(0, Date.now() - new Date(meta.startedAt).getTime()),
+    started_at: meta.startedAt,
+    answers: detail
+  };
+  const delays = [1000, 3000, 6000];
+  const current = () => S.meta && S.meta.subId === meta.subId;
+
+  for(let attempt = 0; attempt <= 3; attempt++){
+    if(!current()) return;
+    note.className = 'submit-note';
+    note.textContent = attempt === 0 ? '正在提交成绩…' : '提交失败，正在重试（' + attempt + '/3）…';
+    try {
+      const res = await getClient().from(CFG.table || 'submissions').insert(payload);
+      if(res && res.error) throw res.error;
+      if(!current()) return;
+      S.submitted = true;
+      note.className = 'submit-note ok';
+      note.textContent = '成绩已提交给老师。';
+      return;
+    } catch(e){
+      if(!current()) return;
+      if(attempt === 3){
+        note.className = 'submit-note no';
+        note.innerHTML = '成绩已生成，但提交未成功。<button type="button" id="retryBtn">重新提交</button>';
+        $('retryBtn').onclick = () => submitResult(score, detail);
+        return;
+      }
+      await new Promise(r => setTimeout(r, delays[attempt]));
+    }
+  }
 }
 
 function esc(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+
+try {
+  $('stuName').value = localStorage.getItem(NAME_KEY) || '';
+  $('stuClass').value = localStorage.getItem(CLASS_KEY) || '';
+} catch(e){}
 
 $('startBtn').onclick = startQuiz;
 $('againBtn').onclick = startQuiz;

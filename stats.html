@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#eef3f9">
+<title>单词检测 · 统计后台</title>
+<style>
+  :root{
+    --bg:#eef3f9; --card:#ffffff; --ink:#102a43; --ink-2:#5a7189; --muted:#8fa3b8;
+    --blue:#1e5aa8; --blue-dark:#12395c; --line:#e0e8f2; --warn:#b04a3a;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#f7fafd 0%,var(--bg) 320px,var(--bg) 100%);
+    color:var(--ink);font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+    min-height:100vh;font-size:14px;padding:22px 16px 40px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;min-width:0}
+  .brand{display:flex;align-items:center;gap:10px;margin:0 2px 16px}
+  .mark{
+    width:30px;height:30px;border-radius:8px;background:var(--blue-dark);color:#fff;
+    display:grid;place-items:center;font:700 12px/1 Arial,sans-serif;letter-spacing:.04em;
+  }
+  .brand-t{font-size:12px;font-weight:700;letter-spacing:.16em;color:var(--ink-2)}
+  .brand-s{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 6px 20px rgba(16,42,67,.05);padding:20px;margin-bottom:14px;
+  }
+  h1{font-size:22px;margin:0 0 10px;font-weight:700}
+  h2{font-size:13px;margin:0 0 14px;font-weight:700;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  h2 .muted{font-weight:400;font-size:11.5px;color:var(--muted)}
+  .sub{color:var(--ink-2);font-size:13px;line-height:1.7;margin:0}
+  .empty{color:var(--muted);font-size:12.5px;padding:10px 0}
+  .login{max-width:400px;margin:48px auto}
+  .login h1{font-size:21px;padding-bottom:12px;border-bottom:1px solid #eef3f9;margin-bottom:12px}
+  .fl{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-2);margin:14px 0 0}
+  .fl input{
+    font:inherit;font-size:15px;font-weight:400;color:var(--ink);background:#fff;
+    border:1px solid #d9e3ef;border-radius:9px;padding:10px 12px;outline:none;height:42px;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .fl input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,90,168,.08)}
+  .lerr{color:var(--warn);font-size:12.5px;margin:12px 0 0;line-height:1.6}
+  .btn{
+    font-family:inherit;font-size:12.5px;font-weight:600;border:0;border-radius:9px;
+    padding:9px 13px;cursor:pointer;transition:background .15s,border-color .15s;
+  }
+  .btn-primary{background:var(--blue);color:#fff;width:100%;padding:12px;font-size:15px;margin-top:18px}
+  .btn-primary:hover{background:#17497f}
+  .btn-primary:disabled{background:#e8eef7;color:#a3b5c9;cursor:default}
+  .btn-ghost{background:#fff;border:1px solid #c9d8e8;color:var(--blue)}
+  .btn-ghost:hover{border-color:var(--blue)}
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+  .filter{display:flex;flex-direction:column;gap:5px;min-width:96px}
+  .filter > span{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+  .filter select,.filter input{
+    font-family:inherit;font-size:13px;color:var(--ink);background:#fff;
+    border:1px solid #d9e3ef;border-radius:8px;padding:7px 10px;outline:none;height:36px;
+  }
+  .filter select:focus,.filter input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,90,168,.08)}
+  .filter.grow{flex:1 1 160px}
+  .filter.grow input{width:100%}
+  .tb-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .status{font-size:12.5px;color:var(--muted);margin:-4px 2px 14px;min-height:17px}
+  .status.err{color:var(--warn)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 20px rgba(16,42,67,.05);padding:16px 18px}
+  .kpi .l{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.06em}
+  .kpi .v{font:600 30px/1 Georgia,serif;margin-top:10px;color:var(--ink);overflow-wrap:anywhere}
+  .kpi .v small{font:600 12px/1 "PingFang SC",sans-serif;color:var(--muted);margin-left:3px}
+  .cols{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start;margin-bottom:14px}
+  .cols > .card{margin-bottom:0}
+  .stack{display:flex;flex-direction:column;gap:14px}
+  .stack > .card{margin-bottom:0}
+  .brow{display:grid;grid-template-columns:58px 1fr 40px;gap:10px;align-items:center;margin:8px 0;font-size:12.5px;color:var(--ink-2)}
+  .btrack{height:9px;background:#eef4fb;border-radius:99px;overflow:hidden}
+  .btrack i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .3s ease;min-width:0}
+  .bv{text-align:right;color:var(--ink);font-weight:600}
+  .wrow{display:grid;grid-template-columns:minmax(0,1fr) 80px 52px;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #f0f4f9;font-size:12.5px}
+  .wrow:first-child{border-top:0}
+  .wmain{min-width:0}
+  .wmain b{font:600 13.5px/1.4 Georgia,serif;color:var(--ink);margin-right:6px}
+  .wmain span{color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+  .wrate{text-align:right;color:var(--warn);font-weight:600}
+  .trow{display:flex;align-items:center;gap:10px;margin:12px 0 4px}
+  .tname{width:52px;font-size:12.5px;color:var(--ink-2);flex:none}
+  .tbar{flex:1}
+  .tpct{width:60px;text-align:right;font-size:12.5px;font-weight:600;flex:none}
+  .tsub{font-size:11px;color:var(--muted);margin:0 0 8px 62px}
+  .mini{width:100%;border-collapse:collapse;font-size:12.5px}
+  .mini th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;padding:0 8px 8px 0;white-space:nowrap}
+  .mini td{padding:7px 8px 7px 0;border-top:1px solid #f0f4f9;color:var(--ink)}
+  .mini th.num,.mini td.num{text-align:right;padding-right:0}
+  .tablewrap{overflow-x:auto;margin:0 -4px;padding:0 4px}
+  table.data{width:100%;border-collapse:collapse;font-size:12.5px;min-width:660px}
+  table.data th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;padding:0 10px 9px;white-space:nowrap}
+  table.data td{padding:10px;border-top:1px solid #f0f4f9;white-space:nowrap;color:var(--ink)}
+  table.data tr.row{cursor:pointer}
+  table.data tr.row:hover td{background:#f8fbff}
+  table.data td.name{font-weight:600}
+  table.data tr.detail td{background:#fafcff;padding:0;border-top:0}
+  .dwrap{padding:8px 14px 12px;border-top:1px dashed #dbe6f3}
+  .ditem{display:flex;flex-wrap:wrap;gap:3px 10px;padding:6px 0;border-bottom:1px dashed #e8f0f8;font-size:12.5px;align-items:baseline;white-space:normal}
+  .ditem:last-child{border-bottom:0}
+  .dno{width:16px;color:var(--muted);flex:none}
+  .dw{font:600 13px/1.4 Georgia,serif;color:var(--ink);min-width:76px}
+  .dm{color:var(--muted);flex:1;min-width:120px}
+  .tag-ok{color:var(--blue);font-weight:700}
+  .tag-no{color:var(--warn);font-weight:700}
+  .dpick,.dans{color:var(--ink-2)}
+  .badge{display:inline-block;font-size:11px;font-weight:600;color:#365a7d;background:#eef4fb;border-radius:5px;padding:2px 7px}
+  .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:18px;letter-spacing:.04em}
+  @media (max-width:860px){
+    .cols{grid-template-columns:1fr}
+  }
+  @media (max-width:720px){
+    body{padding:16px 12px 32px}
+    .card{padding:16px}
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi .v{font-size:24px}
+    .tb-actions{margin-left:0;width:100%}
+    .tb-actions .btn{flex:1 1 auto;white-space:nowrap;font-size:12px;padding:8px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">EN</div>
+    <div>
+      <div class="brand-t">WORD CHECK · 统计后台</div>
+      <div class="brand-s">688 高频词检测 · 教师看板</div>
+    </div>
+  </div>
+
+  <section class="card login" id="loginView">
+    <h1>教师登录</h1>
+    <p class="sub">使用 Supabase 中创建的教师账号登录。登录后才能查看学生成绩，学生端无法读取这些数据。</p>
+    <form id="loginForm" autocomplete="on">
+      <label class="fl">邮箱<input id="loginUser" type="email" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+      <label class="fl">密码<input id="loginPass" type="password" autocomplete="current-password"></label>
+      <p class="lerr" id="loginErr" hidden></p>
+      <button class="btn btn-primary" id="loginBtn" type="submit">登录</button>
+    </form>
+  </section>
+
+  <div id="appView" hidden>
+    <section class="card toolbar">
+      <div class="filter">
+        <span>测验类型</span>
+        <select id="fQuiz">
+          <option value="all">全部</option>
+          <option value="weekly">总词表 10 题</option>
+          <option value="special">专项 5 题</option>
+        </select>
+      </div>
+      <div class="filter">
+        <span>班级</span>
+        <select id="fClass"><option value="all">全部班级</option></select>
+      </div>
+      <div class="filter">
+        <span>时间</span>
+        <select id="fRange">
+          <option value="all">全部</option>
+          <option value="today">今天</option>
+          <option value="7d">近 7 天</option>
+        </select>
+      </div>
+      <div class="filter grow">
+        <span>姓名</span>
+        <input id="fName" placeholder="输入姓名搜索" autocomplete="off">
+      </div>
+      <div class="tb-actions">
+        <button class="btn btn-ghost" id="refreshBtn" type="button">刷新</button>
+        <button class="btn btn-ghost" id="exportSum" type="button">导出汇总 CSV</button>
+        <button class="btn btn-ghost" id="exportDetail" type="button">导出明细 CSV</button>
+        <button class="btn btn-ghost" id="logoutBtn" type="button">退出</button>
+      </div>
+    </section>
+    <p class="status" id="status"></p>
+
+    <div class="kpis" id="kpis"></div>
+
+    <section class="card">
+      <h2>正确率分布</h2>
+      <div id="dist"></div>
+    </section>
+
+    <div class="cols">
+      <section class="card">
+        <h2>单词错误排行 Top 15</h2>
+        <div id="words"></div>
+      </section>
+      <div class="stack">
+        <section class="card">
+          <h2>题型正确率</h2>
+          <div id="types"></div>
+        </section>
+        <section class="card">
+          <h2>班级对比</h2>
+          <div id="classes"></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card">
+      <h2>最近提交 <span class="muted" id="listCount"></span></h2>
+      <div class="tablewrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>姓名</th><th>班级</th><th>类型</th><th>得分</th><th>正确率</th><th>用时</th><th>提交时间</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="foot">数据来自统计数据库 · 按提交时间倒序 · 同一份提交自动去重</p>
+  </div>
+</div>
+
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.WORD_CHECK_CONFIG || {};
+const TYPE_LABEL = { weekly: "总词表 10 题", special: "专项 5 题" };
+const $ = id => document.getElementById(id);
+let clientApp = null, authApi = null;
+let ALL = [], CURRENT = [];
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+function errText(e) {
+  if (!e) return "未知错误";
+  return e.message || e.errMsg || e.msg || String(e);
+}
+
+function getClient() {
+  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+    throw new Error("后台 SDK 未加载，请刷新页面重试");
+  }
+  if (!clientApp) clientApp = window.supabase.createClient(CFG.url, CFG.anonKey);
+  return clientApp;
+}
+
+function getAuth() {
+  return getClient().auth;
+}
+
+function setStatus(text, isErr) {
+  const el = $("status");
+  el.textContent = text || "";
+  el.className = "status" + (isErr ? " err" : "");
+}
+
+function loginErr(text) {
+  const el = $("loginErr");
+  el.textContent = text || "";
+  el.hidden = !text;
+}
+
+function setLoginBusy(busy) {
+  $("loginBtn").disabled = busy;
+  $("loginBtn").textContent = busy ? "登录中…" : "登录";
+}
+
+function showLogin() {
+  $("appView").hidden = true;
+  $("loginView").hidden = false;
+}
+
+function dateFrom(v) {
+  if (v == null) return null;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if (typeof v === "number") { const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+  if (typeof v === "string") { const d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+  if (typeof v === "object") {
+    if (v.$date != null) return dateFrom(v.$date);
+    if (v.seconds != null) return new Date(v.seconds * 1000);
+    if (v._seconds != null) return new Date(v._seconds * 1000);
+  }
+  return null;
+}
+
+function rowDate(r) {
+  return dateFrom(r.created_at) || dateFrom(r.started_at);
+}
+
+function startDate(r) {
+  return dateFrom(r.started_at) || rowDate(r);
+}
+
+function fmtTime(d) {
+  if (!d) return "—";
+  const p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+
+function fmtTimeFull(d) {
+  if (!d) return "";
+  const p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+}
+
+function fmtClock(ms) {
+  if (!ms || ms < 0) return "—";
+  const s = Math.round(ms / 1000);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+function pctOf(r) {
+  const total = Number(r.total) || 0;
+  const score = Number(r.score) || 0;
+  if (total <= 0) return 0;
+  return Math.max(0, Math.min(100, score / total * 100));
+}
+
+function binOf(pct) {
+  if (pct < 60) return 0;
+  if (pct < 70) return 1;
+  if (pct < 80) return 2;
+  if (pct < 90) return 3;
+  if (pct < 100) return 4;
+  return 5;
+}
+
+async function boot() {
+  if (!CFG.url || !CFG.anonKey) {
+    showLogin();
+    loginErr("尚未配置后台：请先在 config.js 中填写 Supabase 项目地址和 anon key。");
+    $("loginBtn").disabled = true;
+    return;
+  }
+  try {
+    const auth = getAuth();
+    const r = await auth.getSession();
+    if (r && r.data && r.data.session) { await enterApp(); return; }
+  } catch (e) {}
+  showLogin();
+}
+
+async function enterApp() {
+  $("loginView").hidden = true;
+  $("appView").hidden = false;
+  loginErr("");
+  await loadData();
+}
+
+async function fetchAll() {
+  const client = getClient();
+  const PAGE = 1000;
+  const acc = [];
+  for (let from = 0; from < 40000; from += PAGE) {
+    const r = await client.from(CFG.table || "submissions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (r && r.error) throw r.error;
+    const list = (r && r.data) || [];
+    acc.push.apply(acc, list);
+    if (list.length < PAGE) break;
+  }
+  const seen = new Set();
+  return acc.filter(function (r) {
+    const id = r.sub_id || r._id;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
+async function loadData() {
+  setStatus("正在读取数据…");
+  try {
+    ALL = await fetchAll();
+    buildClassOptions();
+    render();
+    setStatus("已载入 " + ALL.length + " 份提交。");
+  } catch (e) {
+    const msg = errText(e);
+    setStatus(/does not exist|42P01/i.test(msg)
+      ? "读取失败：数据表不存在，请先在 Supabase 中执行建表 SQL。"
+      : "读取失败：" + msg, true);
+  }
+}
+
+function buildClassOptions() {
+  const sel = $("fClass");
+  const prev = sel.value;
+  const set = new Set();
+  let hasNone = false;
+  ALL.forEach(function (r) {
+    const k = String(r.klass || "").trim();
+    if (k) set.add(k); else hasNone = true;
+  });
+  const opts = ['<option value="all">全部班级</option>'];
+  Array.from(set).sort(function (a, b) { return a.localeCompare(b, "zh-CN"); }).forEach(function (k) {
+    opts.push('<option value="' + esc(k) + '">' + esc(k) + "</option>");
+  });
+  if (hasNone) opts.push('<option value="__none__">未填班级</option>');
+  sel.innerHTML = opts.join("");
+  const ok = Array.from(sel.options).some(function (o) { return o.value === prev; });
+  sel.value = ok ? prev : "all";
+}
+
+function filtered() {
+  const quiz = $("fQuiz").value;
+  const klass = $("fClass").value;
+  const range = $("fRange").value;
+  const name = $("fName").value.trim().toLowerCase();
+  const now = new Date();
+  let startTs = 0;
+  if (range === "today") {
+    startTs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  } else if (range === "7d") {
+    startTs = Date.now() - 7 * 86400000;
+  }
+
+  return ALL.filter(function (r) {
+    if (quiz !== "all" && r.quiz !== quiz) return false;
+    if (klass !== "all") {
+      const k = String(r.klass || "").trim() || "__none__";
+      if (k !== klass) return false;
+    }
+    if (name) {
+      const n = String(r.name || "").toLowerCase();
+      if (n.indexOf(name) === -1) return false;
+    }
+    if (startTs) {
+      const d = rowDate(r);
+      if (!d || d.getTime() < startTs) return false;
+    }
+    return true;
+  });
+}
+
+function render() {
+  const rows = filtered();
+  CURRENT = rows;
+  renderKpis(rows);
+  renderDist(rows);
+  renderWords(rows);
+  renderTypes(rows);
+  renderClasses(rows);
+  renderTable(rows);
+}
+
+function kpi(value, unit, label) {
+  return '<div class="kpi"><div class="l">' + label + '</div><div class="v">' + value
+    + (unit ? "<small>" + unit + "</small>" : "") + "</div></div>";
+}
+
+function renderKpis(rows) {
+  const n = rows.length;
+  const names = new Set();
+  rows.forEach(function (r) {
+    const nm = String(r.name || "").trim();
+    if (nm) names.add(nm);
+  });
+  let accSum = 0, durSum = 0;
+  rows.forEach(function (r) {
+    accSum += pctOf(r);
+    durSum += Number(r.duration_ms) || 0;
+  });
+  $("kpis").innerHTML =
+    kpi(n, "份", "提交份数") +
+    kpi(names.size, "人", "参与人数") +
+    kpi(n ? (accSum / n).toFixed(1) : "—", n ? "%" : "", "平均正确率") +
+    kpi(n ? fmtClock(durSum / n) : "—", "", "平均用时（分:秒）");
+}
+
+function renderDist(rows) {
+  const bins = [0, 0, 0, 0, 0, 0];
+  rows.forEach(function (r) { bins[binOf(pctOf(r))]++; });
+  if (!rows.length) {
+    $("dist").innerHTML = '<div class="empty">当前筛选范围内没有数据。</div>';
+    return;
+  }
+  const labels = ["&lt;60%", "60–69%", "70–79%", "80–89%", "90–99%", "100%"];
+  const max = Math.max.apply(null, bins.concat([1]));
+  $("dist").innerHTML = bins.map(function (v, i) {
+    return '<div class="brow"><span>' + labels[i] + '</span><div class="btrack"><i style="width:'
+      + (v / max * 100).toFixed(1) + '%"></i></div><span class="bv">' + v + "</span></div>";
+  }).join("");
+}
+
+function renderWords(rows) {
+  const map = new Map();
+  rows.forEach(function (r) {
+    (r.answers || []).forEach(function (a) {
+      const w = String(a.word || "").trim();
+      if (!w) return;
+      let e = map.get(w);
+      if (!e) { e = { word: w, mean: a.mean || "", n: 0, bad: 0 }; map.set(w, e); }
+      e.n++;
+      if (a.ok !== true) e.bad++;
+      if (!e.mean && a.mean) e.mean = a.mean;
+    });
+  });
+  const list = Array.from(map.values())
+    .sort(function (a, b) {
+      return (b.bad - a.bad) || ((b.bad / b.n) - (a.bad / a.n)) || (b.n - a.n);
+    })
+    .slice(0, 15);
+  const hasErr = list.some(function (e) { return e.bad > 0; });
+
+  if (!list.length) {
+    $("words").innerHTML = '<div class="empty">当前筛选范围内没有作答记录。</div>';
+    return;
+  }
+  if (!hasErr) {
+    $("words").innerHTML = '<div class="empty">当前筛选范围内没有错题。</div>';
+    return;
+  }
+  const maxRate = Math.max.apply(null, list.map(function (e) { return e.n ? e.bad / e.n : 0; }).concat([0.01]));
+  $("words").innerHTML = list.map(function (e) {
+    const rate = e.n ? e.bad / e.n * 100 : 0;
+    const width = Math.max(3, (rate / 100) / maxRate * 100);
+    return '<div class="wrow">'
+      + '<div class="wmain"><b>' + esc(e.word) + "</b><span>" + esc(e.mean) + "</span></div>"
+      + '<div class="btrack"><i style="width:' + width.toFixed(1) + '%"></i></div>'
+      + '<div class="wrate">' + rate.toFixed(0) + "%</div>"
+      + "</div>";
+  }).join("");
+}
+
+function renderTypes(rows) {
+  const g = { e2c: { n: 0, ok: 0 }, c2e: { n: 0, ok: 0 } };
+  rows.forEach(function (r) {
+    (r.answers || []).forEach(function (a) {
+      const t = a.type === "c2e" ? "c2e" : "e2c";
+      g[t].n++;
+      if (a.ok === true) g[t].ok++;
+    });
+  });
+  const names = { e2c: "英译中", c2e: "中译英" };
+  $("types").innerHTML = ["e2c", "c2e"].map(function (t) {
+    const n = g[t].n, ok = g[t].ok;
+    const p = n ? ok / n * 100 : 0;
+    return '<div class="trow"><span class="tname">' + names[t] + '</span>'
+      + '<div class="btrack tbar"><i style="width:' + p.toFixed(1) + '%"></i></div>'
+      + '<span class="tpct">' + (n ? p.toFixed(1) + "%" : "—") + "</span></div>"
+      + '<div class="tsub">作答 ' + n + " 题 · 正确 " + ok + " 题</div>";
+  }).join("");
+}
+
+function renderClasses(rows) {
+  const map = new Map();
+  rows.forEach(function (r) {
+    const k = String(r.klass || "").trim() || "未填班级";
+    let e = map.get(k);
+    if (!e) { e = { k: k, n: 0, sum: 0, names: new Set() }; map.set(k, e); }
+    e.n++;
+    e.sum += pctOf(r);
+    const nm = String(r.name || "").trim();
+    if (nm) e.names.add(nm);
+  });
+  const list = Array.from(map.values()).sort(function (a, b) { return b.n - a.n; });
+  if (!list.length) {
+    $("classes").innerHTML = '<div class="empty">暂无数据。</div>';
+    return;
+  }
+  $("classes").innerHTML = '<table class="mini"><thead><tr><th>班级</th><th class="num">份数</th>'
+    + '<th class="num">人数</th><th class="num">平均正确率</th></tr></thead><tbody>'
+    + list.map(function (e) {
+      return "<tr><td>" + esc(e.k) + '</td><td class="num">' + e.n + '</td><td class="num">'
+        + e.names.size + '</td><td class="num">' + (e.sum / e.n).toFixed(1) + "%</td></tr>";
+    }).join("")
+    + "</tbody></table>";
+}
+
+function detailHtml(r) {
+  const ans = r.answers || [];
+  if (!ans.length) return '<div class="empty">这份提交没有逐题明细（可能是旧版本页面）。</div>';
+  return ans.map(function (a, i) {
+    const ok = a.ok === true;
+    const picked = a.picked == null || a.picked === "" ? "未作答" : a.picked;
+    return '<div class="ditem">'
+      + '<span class="dno">' + (i + 1) + "</span>"
+      + '<span class="dw">' + esc(a.word || "") + "</span>"
+      + '<span class="dm">' + esc(a.mean || "") + "</span>"
+      + '<span class="' + (ok ? "tag-ok" : "tag-no") + '">' + (ok ? "正确" : "错误") + "</span>"
+      + '<span class="dpick">你选：' + esc(picked) + "</span>"
+      + '<span class="dans">正确：' + esc(a.answer == null ? "" : a.answer) + "</span>"
+      + "</div>";
+  }).join("");
+}
+
+function renderTable(rows) {
+  const list = rows.slice(0, 40);
+  const tb = $("tbody");
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="7" class="empty">当前筛选范围内没有提交。</td></tr>';
+    $("listCount").textContent = "共 0 份";
+    return;
+  }
+  tb.innerHTML = list.map(function (r) {
+    return '<tr class="row">'
+      + '<td class="name">' + esc(r.name || "—") + "</td>"
+      + "<td>" + esc(String(r.klass || "").trim() || "—") + "</td>"
+      + '<td><span class="badge">' + esc(TYPE_LABEL[r.quiz] || r.quiz || "—") + "</span></td>"
+      + "<td>" + (Number(r.score) || 0) + " / " + (Number(r.total) || 0) + "</td>"
+      + "<td>" + pctOf(r).toFixed(0) + "%</td>"
+      + "<td>" + fmtClock(Number(r.duration_ms) || 0) + "</td>"
+      + "<td>" + fmtTime(rowDate(r)) + "</td>"
+      + '</tr><tr class="detail" hidden><td colspan="7"><div class="dwrap">' + detailHtml(r) + "</div></td></tr>";
+  }).join("");
+  $("listCount").textContent = "共 " + rows.length + " 份，显示最近 " + list.length + " 份";
+}
+
+function csvCell(v) {
+  const s = String(v == null ? "" : v);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function downloadCsv(filename, lines) {
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+}
+
+function stamp() {
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate());
+}
+
+function guardExport() {
+  if (!CURRENT.length) {
+    setStatus("当前筛选结果为空，没有可导出的数据。", true);
+    return false;
+  }
+  return true;
+}
+
+function exportSummary() {
+  if (!guardExport()) return;
+  const head = ["姓名", "班级", "测验类型", "得分", "满分", "正确率", "用时（秒）", "开始时间", "提交时间", "提交 ID"];
+  const lines = [head.map(csvCell).join(",")];
+  CURRENT.forEach(function (r) {
+    lines.push([
+      r.name || "", String(r.klass || "").trim(), TYPE_LABEL[r.quiz] || r.quiz || "",
+      Number(r.score) || 0, Number(r.total) || 0, pctOf(r).toFixed(1) + "%",
+      Math.round((Number(r.duration_ms) || 0) / 1000),
+      fmtTimeFull(startDate(r)), fmtTimeFull(rowDate(r)), r.sub_id || r._id || ""
+    ].map(csvCell).join(","));
+  });
+  downloadCsv("单词检测汇总_" + stamp() + ".csv", lines);
+  setStatus("已导出汇总 CSV（" + CURRENT.length + " 份）。");
+}
+
+function exportDetail() {
+  if (!guardExport()) return;
+  const head = ["姓名", "班级", "测验类型", "得分", "满分", "提交时间", "题号", "题型", "单词", "释义", "学生答案", "正确答案", "是否正确"];
+  const lines = [head.map(csvCell).join(",")];
+  CURRENT.forEach(function (r) {
+    (r.answers || []).forEach(function (a, i) {
+      lines.push([
+        r.name || "", String(r.klass || "").trim(), TYPE_LABEL[r.quiz] || r.quiz || "",
+        Number(r.score) || 0, Number(r.total) || 0, fmtTimeFull(rowDate(r)),
+        i + 1, a.type === "c2e" ? "中译英" : "英译中", a.word || "", a.mean || "",
+        a.picked == null || a.picked === "" ? "未作答" : a.picked,
+        a.answer == null ? "" : a.answer, a.ok === true ? "正确" : "错误"
+      ].map(csvCell).join(","));
+    });
+  });
+  downloadCsv("单词检测明细_" + stamp() + ".csv", lines);
+  setStatus("已导出明细 CSV。");
+}
+
+$("loginForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const email = $("loginUser").value.trim();
+  const pass = $("loginPass").value;
+  loginErr("");
+  if (!email || !pass) { loginErr("请输入邮箱和密码。"); return; }
+
+  setLoginBusy(true);
+  try {
+    const auth = getAuth();
+    try { await auth.signOut(); } catch (e2) {}
+    const r = await auth.signInWithPassword({ email: email, password: pass });
+    if (r && r.error) throw r.error;
+    $("loginPass").value = "";
+    await enterApp();
+  } catch (err) {
+    const msg = errText(err);
+    if (/email not confirmed/i.test(msg)) {
+      loginErr("邮箱还未验证：请先在 Supabase 控制台确认该账号，或关闭邮箱验证。");
+    } else if (/invalid|credentials|password|email/i.test(msg)) {
+      loginErr("邮箱或密码错误，请重试。");
+    } else {
+      loginErr("登录失败：" + msg);
+    }
+  } finally {
+    setLoginBusy(false);
+  }
+});
+
+$("logoutBtn").addEventListener("click", async function () {
+  try { await getAuth().signOut(); } catch (e) {}
+  ALL = []; CURRENT = [];
+  $("fName").value = "";
+  showLogin();
+  loginErr("");
+});
+
+$("refreshBtn").addEventListener("click", function () { loadData(); });
+
+["fQuiz", "fClass", "fRange"].forEach(function (id) {
+  $(id).addEventListener("change", render);
+});
+
+let nameTimer = null;
+$("fName").addEventListener("input", function () {
+  clearTimeout(nameTimer);
+  nameTimer = setTimeout(render, 180);
+});
+
+$("exportSum").addEventListener("click", exportSummary);
+$("exportDetail").addEventListener("click", exportDetail);
+
+$("tbody").addEventListener("click", function (e) {
+  const tr = e.target.closest("tr.row");
+  if (!tr) return;
+  const d = tr.nextElementSibling;
+  if (d && d.classList.contains("detail")) d.hidden = !d.hidden;
+});
+
+boot();
+</script>
+</body>
+</html>
