@@ -129,6 +129,30 @@
     border-radius:10px;font-size:13px;color:var(--blue-dark);line-height:1.7;
   }
   .rank-note b{color:var(--blue);font-size:15px;padding:0 1px}
+  .board{margin:14px 0 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .board-title{
+    display:flex;justify-content:space-between;align-items:baseline;padding:11px 14px;
+    font-size:13px;font-weight:700;color:var(--blue-dark);background:#f8fbff;border-bottom:1px solid #e8f0f8;
+  }
+  .board-count{font-size:11.5px;font-weight:400;color:var(--muted)}
+  .board-head,.brow{
+    display:grid;grid-template-columns:44px minmax(0,1fr) 62px 52px;
+    gap:6px;align-items:center;padding:9px 14px;
+  }
+  .board-head{font-size:11px;color:var(--muted);border-bottom:1px solid #eef4fa}
+  .board-list{max-height:280px;overflow:auto}
+  .brow{font-size:12.5px;border-bottom:1px solid #f1f6fb}
+  .brow:last-child{border-bottom:0}
+  .brow.me{background:#eef5ff}
+  .brk{color:var(--muted);font-variant-numeric:tabular-nums}
+  .brow.me .brk{color:var(--blue);font-weight:700}
+  .bname{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bname i{
+    font-style:normal;font-size:10px;line-height:1.5;color:#fff;background:var(--blue);
+    border-radius:4px;padding:0 4px;margin-left:4px;vertical-align:1px;
+  }
+  .bscore{font-weight:700;color:var(--blue-dark);font-variant-numeric:tabular-nums}
+  .btime{color:var(--muted);font-variant-numeric:tabular-nums}
   #startBtn{margin-top:20px}
   .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:20px;letter-spacing:.06em}
 </style>
@@ -154,7 +178,7 @@
       <label class="field"><span>班级 <i>选填</i></span><input id="stuClass" maxlength="20" placeholder="如：高一3班" autocomplete="off"></label>
     </div>
     <p class="formerr" id="formErr" hidden>请填写姓名后再开始。</p>
-    <p class="privacy">姓名与成绩仅用于课堂统计，老师可见；不收集手机号等信息。</p>
+    <p class="privacy">姓名、成绩和用时仅用于课堂统计；交卷后会显示在成绩榜中，本页其他作答者可见；不收集手机号等信息。</p>
     <button class="btn btn-primary" id="startBtn">开始检测</button>
     <div class="rule">每次打开都会重新抽题，可反复练习直到整张词表过一遍。</div>
   </section>
@@ -180,6 +204,11 @@
     <p class="verdict" id="verdict"></p>
     <p class="submit-note" id="submitNote"></p>
     <p class="rank-note" id="rankNote" hidden></p>
+    <div class="board" id="boardWrap" hidden>
+      <div class="board-title"><span>成绩榜</span><span class="board-count" id="boardCount"></span></div>
+      <div class="board-head"><span>名次</span><span>姓名</span><span>得分</span><span>用时</span></div>
+      <div class="board-list" id="boardList"></div>
+    </div>
     <div id="wrongBox"></div>
     <div class="btn-row">
       <button class="btn btn-ghost" id="homeBtn" style="flex:1">返回首页</button>
@@ -292,6 +321,8 @@ function startQuiz(){
   $('submitNote').textContent = '';
   $('rankNote').hidden = true;
   $('rankNote').textContent = '';
+  $('boardWrap').hidden = true;
+  $('boardList').innerHTML = '';
   show('s-quiz'); render();
 }
 
@@ -420,7 +451,7 @@ async function submitResult(score, detail){
       S.submitted = true;
       note.className = 'submit-note ok';
       note.textContent = '成绩已提交给老师。';
-      showRank(meta.subId);
+      showBoard(meta.subId);
       return;
     } catch(e){
       if(!current()) return;
@@ -435,26 +466,45 @@ async function submitResult(score, detail){
   }
 }
 
-async function showRank(subId){
-  const el = $('rankNote');
-  if(!el) return;
+async function showBoard(subId){
+  const wrap = $('boardWrap'), el = $('rankNote');
+  if(!wrap) return;
   try{
-    const r = await getClient().rpc('quiz_rank', { p_sub_id: subId });
+    const r = await getClient().rpc('quiz_leaderboard', { p_sub_id: subId });
     if(r && r.error) throw r.error;
-    const row = r && r.data && r.data[0];
-    if(!row || !S.meta || S.meta.subId !== subId) return;
-    const players = Number(row.players) || 0;
-    const rank = Number(row.rank) || 0;
-    const pct = Number(row.beat_pct) || 0;
-    if(players <= 0 || rank <= 0) return;
-    if(players === 1){
-      el.innerHTML = '你是<b>第 1 位</b>完成这份检测的同学。';
-    } else {
-      el.innerHTML = '本次成绩在<b>' + players + '</b>位作答者中排<b>第 ' + rank + ' 名</b>'
-        + (pct > 0 ? '，超过<b>' + pct + '%</b>的作答者。' : '。');
+    const rows = (r && r.data) || [];
+    if(!rows.length || !S.meta || S.meta.subId !== subId) return;
+    const me = rows.filter(function(x){ return x.is_me; })[0];
+    const players = rows.length;
+    if(me){
+      const rank = Number(me.rank) || 0;
+      const mine = Number(me.score) || 0;
+      const lower = rows.filter(function(x){ return Number(x.score) < mine; }).length;
+      const pct = players ? Math.round(lower * 100 / players) : 0;
+      if(players === 1){
+        el.innerHTML = '你是<b>第 1 位</b>完成这份检测的同学。';
+      } else {
+        el.innerHTML = '本次成绩在<b>' + players + '</b>位作答者中排<b>第 ' + rank + ' 名</b>'
+          + (pct > 0 ? '，超过<b>' + pct + '%</b>的作答者。' : '。');
+      }
+      el.hidden = false;
     }
-    el.hidden = false;
+    $('boardCount').textContent = players + ' 人';
+    $('boardList').innerHTML = rows.map(function(x){
+      const score = Number(x.score) || 0, total = Number(x.total) || 0;
+      return '<div class="brow' + (x.is_me ? ' me' : '') + '">'
+        + '<span class="brk">' + (Number(x.rank) || 0) + '</span>'
+        + '<span class="bname">' + esc(x.name == null ? '' : x.name) + (x.is_me ? '<i>你</i>' : '') + '</span>'
+        + '<span class="bscore">' + score + '/' + total + '</span>'
+        + '<span class="btime">' + fmtDur(Number(x.duration_ms) || 0) + '</span></div>';
+    }).join('');
+    wrap.hidden = false;
   }catch(e){}
+}
+
+function fmtDur(ms){
+  const s = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 }
 
 function esc(s){
