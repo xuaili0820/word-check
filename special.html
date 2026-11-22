@@ -163,13 +163,13 @@
 
   <section class="card head">
     <h1>专项词汇检测</h1>
-    <p class="sub">5 个高频词，选出正确的中文释义。点击选项立即判对错，并附释义与搭配。</p>
+    <p class="sub">11.22 词表 · 5 个高频词，选出正确的中文释义。点击选项立即判对错，并附释义与搭配。</p>
     <div class="chips">
-      <span class="chip">constant</span>
-      <span class="chip">precious</span>
-      <span class="chip">resource</span>
-      <span class="chip">productive</span>
-      <span class="chip">stimulation</span>
+      <span class="chip">diversity</span>
+      <span class="chip">affect</span>
+      <span class="chip">stabilize</span>
+      <span class="chip">mature</span>
+      <span class="chip">sources</span>
     </div>
     <div class="fields">
       <label class="field"><span>姓名</span><input id="stuName" maxlength="20" placeholder="请输入姓名" autocomplete="name"></label>
@@ -204,29 +204,29 @@
 <script>
 const QS = [
   {
-    w: "constant", ipa: "/ˈkɒnstənt/", ans: 1,
-    opts: ["短暂的；临时的", "持续不断的；恒定的", "频繁的；屡次的", "逐渐的；渐进的"],
-    tip: "<b>constant</b> 指“持续不断的；恒定的”，常见搭配 constant temperature（恒温）、a constant stream of visitors（络绎不绝的访客）。其他选项分别是 temporary、frequent、gradual 的释义。"
+    w: "diversity", ipa: "/daɪˈvɜːsəti/", ans: 1,
+    opts: ["民主；民主制度", "多样性；差异", "分歧；争论", "优势；有利条件"],
+    tip: "<b>diversity</b> 指“多样性；差异”，如 cultural diversity（文化多样性）、a diversity of views（各种不同观点）。democracy 是“民主”，division 是“分歧”，advantage 是“优势”。"
   },
   {
-    w: "precious", ipa: "/ˈpreʃəs/", ans: 2,
-    opts: ["昂贵的；花钱多的", "精致的；精细的", "珍贵的；宝贵的", "稀有的；罕见的"],
-    tip: "<b>precious</b> 指“珍贵的；宝贵的”，如 precious time（宝贵的时间）、precious metals（贵金属）。expensive 是“昂贵的”，delicate 是“精致的”，rare 是“稀有的”。"
+    w: "affect", ipa: "/əˈfekt/", ans: 0,
+    opts: ["影响；感动", "效果；作用", "努力；尝试", "接受；承认"],
+    tip: "<b>affect</b> 是动词，指“影响；感动”，如 affect the result（影响结果）、be deeply affected（深受感动）。effect 是名词“效果”，effort 是“努力”，accept 是“接受”。"
   },
   {
-    w: "resource", ipa: "/rɪˈsɔːrs/", ans: 1,
-    opts: ["来源；出处", "资源；物力", "储备；积蓄", "精力；活力"],
-    tip: "<b>resource</b> 指“资源；物力”，常见搭配 natural resources（自然资源）、human resources（人力资源）。source 是“来源”，reserve 是“储备”，energy 是“精力”。"
+    w: "stabilize", ipa: "/ˈsteɪbəlaɪz/", ans: 1,
+    opts: ["使标准化", "使稳定；使稳固", "使现代化", "使具体化"],
+    tip: "<b>stabilize</b> 指“（使）稳定；使稳固”，如 stabilize prices（稳定物价）、stabilize the situation（稳定局势）。standardize 是“使标准化”，modernize 是“使现代化”，specify 是“具体说明”。"
   },
   {
-    w: "productive", ipa: "/prəˈdʌktɪv/", ans: 0,
-    opts: ["富有成效的；多产的", "有利可图的；赚钱的", "富有创造力的", "勤奋的；用功的"],
-    tip: "<b>productive</b> 指“富有成效的；多产的”，如 a productive day（高效的一天）、highly productive（高产的）。profitable 是“有利可图的”，creative 是“有创造力的”，diligent 是“勤奋的”。"
+    w: "mature", ipa: "/məˈtʃʊə(r)/", ans: 0,
+    opts: ["成熟的；成年的", "礼貌的；客气的", "谦虚的；谦逊的", "耐心的；有耐心的"],
+    tip: "<b>mature</b> 指“成熟的；成年的”，也可作动词“成熟”，如 a mature attitude（成熟的态度）、mature into（成长为）。polite、modest、patient 分别是“礼貌的”“谦虚的”“耐心的”。"
   },
   {
-    w: "stimulation", ipa: "/ˌstɪmjuˈleɪʃn/", ans: 3,
-    opts: ["模拟；仿真", "估计；评估", "刺激物；兴奋剂", "刺激；激励"],
-    tip: "<b>stimulation</b> 是名词，指“刺激；激励”，动词是 stimulate（促进；激发）。simulation 是“模拟”，estimation 是“估计”，stimulant 才是“兴奋剂”，四个词词形接近，最容易混。"
+    w: "sources", ipa: "/ˈsɔːsɪz/", ans: 1,
+    opts: ["资源；物力", "来源；出处", "课程；科目", "力量；力气"],
+    tip: "<b>sources</b> 是 source 的复数，指“来源；出处；消息来源”，如 news sources（消息来源）、sources of energy（能源）。resource 是“资源”，course 是“课程”，strength 是“力量”，注意 source 与 resource 的区别。"
   }
 ];
 
