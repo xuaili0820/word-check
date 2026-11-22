@@ -115,6 +115,11 @@
     background:none;border:0;color:var(--blue);font:inherit;font-weight:600;
     cursor:pointer;padding:0 2px;text-decoration:underline;
   }
+  .rank-note{
+    margin:0 0 16px;padding:10px 12px;border:1px solid #d9e7f8;background:#f3f8ff;
+    border-radius:10px;font-size:13px;color:var(--blue-dark);line-height:1.7;
+  }
+  .rank-note b{color:var(--blue);font-size:15px;padding:0 1px}
   .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:20px;letter-spacing:.06em}
   @media (max-width:420px){
     body{padding:18px 12px 36px}
@@ -158,6 +163,7 @@
     <div class="dots" id="dots"></div>
     <p class="verdict" id="verdict"></p>
     <p class="submit-note" id="submitNote"></p>
+    <p class="rank-note" id="rankNote" hidden></p>
     <button class="btn btn-primary" id="againBtn">重做一遍</button>
   </section>
 
@@ -225,6 +231,8 @@ function build() {
   state.subId = uid();
   document.getElementById("submitNote").textContent = "";
   document.getElementById("submitNote").className = "submit-note";
+  document.getElementById("rankNote").textContent = "";
+  document.getElementById("rankNote").hidden = true;
   document.getElementById("formErr").hidden = true;
   document.getElementById("doneN").textContent = "0";
 
@@ -389,6 +397,7 @@ async function submitResult(score, detail) {
       document.getElementById("stuName").classList.remove("err");
       note.className = "submit-note ok";
       note.textContent = "成绩已提交给老师。";
+      showRank(payload.sub_id);
       return;
     } catch (e) {
       if (!current()) return;
@@ -401,6 +410,28 @@ async function submitResult(score, detail) {
       await new Promise(function (r) { setTimeout(r, delays[attempt]); });
     }
   }
+}
+
+async function showRank(subId) {
+  const el = document.getElementById("rankNote");
+  if (!el) return;
+  try {
+    const r = await getClient().rpc("quiz_rank", { p_sub_id: subId });
+    if (r && r.error) throw r.error;
+    const row = r && r.data && r.data[0];
+    if (!row || state.subId !== subId) return;
+    const players = Number(row.players) || 0;
+    const rank = Number(row.rank) || 0;
+    const pct = Number(row.beat_pct) || 0;
+    if (players <= 0 || rank <= 0) return;
+    if (players === 1) {
+      el.innerHTML = "你是<b>第 1 位</b>完成这份检测的同学。";
+    } else {
+      el.innerHTML = "本次成绩在<b>" + players + "</b>位作答者中排<b>第 " + rank + " 名</b>"
+        + (pct > 0 ? "，超过<b>" + pct + "%</b>的作答者。" : "。");
+    }
+    el.hidden = false;
+  } catch (e) {}
 }
 
 document.getElementById("stuName").addEventListener("input", function () {
