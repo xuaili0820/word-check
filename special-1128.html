@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eef3f9">
+<title>11.28 专项检测 · 30 题</title>
+<style>
+  :root{
+    --bg:#eef3f9; --card:#ffffff; --ink:#102a43; --ink-2:#5a7189; --muted:#8fa3b8;
+    --blue:#1e5aa8; --blue-dark:#12395c; --line:#e0e8f2; --warn:#b04a3a;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#f7fafd 0%,var(--bg) 340px,var(--bg) 100%);
+    color:var(--ink);
+    font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+    min-height:100vh;overflow-x:hidden;
+    padding:22px 16px 44px;
+  }
+  .wrap{width:100%;max-width:600px;margin:0 auto;min-width:0}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:0 2px}
+  .mark{
+    width:30px;height:30px;border-radius:8px;background:var(--blue-dark);color:#fff;
+    display:grid;place-items:center;font:700 12px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.04em;
+  }
+  .brand-t{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.2em}
+  .score-pill{
+    margin-left:auto;font-size:12px;font-weight:700;color:var(--blue);
+    background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 12px;
+  }
+  .score-pill b{font-size:13px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 8px 28px rgba(16,42,67,.06);padding:24px 22px 22px;
+  }
+  .head{margin-bottom:14px}
+  h1{font-size:24px;line-height:1.4;margin:0 0 12px;letter-spacing:.01em;font-weight:700;position:relative;padding-bottom:14px}
+  h1::after{content:"";position:absolute;left:0;bottom:0;width:38px;height:3px;background:var(--blue);border-radius:2px}
+  .sub{color:var(--ink-2);font-size:13.5px;line-height:1.8;margin:0}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+  .chip{
+    font-size:12px;color:#365a7d;background:#fff;border:1px solid var(--line);
+    border-radius:6px;padding:4px 9px;font-weight:600;
+  }
+  .q{margin-bottom:14px;animation:fade .25s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .qno{font-size:11.5px;font-weight:700;color:var(--blue);letter-spacing:.16em}
+  .state{font-size:12px;color:var(--muted)}
+  .state.ok{color:var(--blue);font-weight:700}
+  .state.no{color:var(--warn);font-weight:700}
+  .word{font:600 30px/1.3 Georgia,"Times New Roman",serif;overflow-wrap:anywhere}
+  .ipa{font:italic 13px/1.5 Georgia,"Times New Roman",serif;color:var(--muted);margin-top:1px}
+  .opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+  .opt{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:#fff;border:1px solid #dfe7f2;border-radius:10px;padding:12px 14px;
+    font-family:inherit;font-size:15px;color:var(--ink);cursor:pointer;
+    line-height:1.5;transition:border-color .15s,background .15s,opacity .15s;
+  }
+  .opt:hover:not(:disabled){border-color:#b9cde6}
+  .opt:disabled{cursor:default}
+  .opt .k{
+    flex:none;width:24px;height:24px;border-radius:6px;background:#eef4fb;color:#6b8399;
+    display:grid;place-items:center;font-size:12px;font-weight:700;
+  }
+  .opt .txt{flex:1;min-width:0;overflow-wrap:anywhere}
+  .opt.right{border-color:var(--blue);background:#f4f9ff}
+  .opt.right .k{background:var(--blue);color:#fff}
+  .opt.wrong{border-color:#d8a49c;background:#fdf5f4}
+  .opt.wrong .k{background:var(--warn);color:#fff}
+  .opt.dim{opacity:.5}
+  .exp{
+    margin-top:14px;border-left:3px solid #dbe6f3;padding:2px 0 2px 12px;
+    font-size:13px;line-height:1.85;color:var(--ink-2);
+  }
+  .exp b{color:var(--ink);font-weight:600}
+  .summary{margin-top:14px;display:none}
+  .summary.show{display:block}
+  .eyebrow{font-size:11.5px;color:var(--muted);letter-spacing:.18em;font-weight:600}
+  .score{display:flex;align-items:baseline;gap:8px;margin:8px 0 2px}
+  .score .n{font:600 54px/1 Georgia,serif;color:var(--ink)}
+  .score .d{font-size:17px;color:var(--muted)}
+  .dots{display:flex;gap:5px;flex-wrap:wrap;margin:16px 0 4px}
+  .dot{width:19px;height:5px;border-radius:2px;background:var(--blue)}
+  .dot.bad{background:var(--warn)}
+  .verdict{font-size:14px;color:var(--ink-2);margin:14px 0 16px;line-height:1.85}
+  .verdict .wl{color:var(--ink);font-family:Georgia,serif;font-weight:600}
+  .btn{
+    width:100%;border:0;border-radius:10px;padding:13px 18px;font-size:15.5px;font-weight:600;
+    font-family:inherit;cursor:pointer;transition:background .15s ease,border-color .15s ease;
+  }
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:#17497f}
+  .btn-primary:active{background:var(--blue-dark)}
+  .fields{display:flex;gap:10px;margin:14px 0 0;flex-wrap:wrap}
+  .field{flex:1 1 140px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-2);font-weight:600}
+  .field i{font-style:normal;color:var(--muted);font-weight:400}
+  .field input{
+    font:inherit;font-size:15px;font-weight:400;color:var(--ink);background:#fff;
+    border:1px solid #d9e3ef;border-radius:9px;padding:10px 12px;outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,90,168,.08)}
+  .field input::placeholder{color:#a9b8c8}
+  .field input.err{border-color:#d8a49c;box-shadow:0 0 0 3px rgba(176,74,58,.08)}
+  .formerr{color:var(--warn);font-size:12.5px;margin:8px 0 0}
+  .privacy{color:var(--muted);font-size:11.5px;line-height:1.7;margin:8px 0 0}
+  .submit-note{margin:4px 0 16px;font-size:12.5px;color:var(--muted);line-height:1.7}
+  .submit-note.ok{color:var(--blue)}
+  .submit-note.no{color:var(--warn)}
+  .submit-note button{
+    background:none;border:0;color:var(--blue);font:inherit;font-weight:600;
+    cursor:pointer;padding:0 2px;text-decoration:underline;
+  }
+  .rank-note{
+    margin:0 0 16px;padding:10px 12px;border:1px solid #d9e7f8;background:#f3f8ff;
+    border-radius:10px;font-size:13px;color:var(--blue-dark);line-height:1.7;
+  }
+  .rank-note b{color:var(--blue);font-size:15px;padding:0 1px}
+  .board{margin:0 0 16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .board-title{
+    display:flex;justify-content:space-between;align-items:baseline;padding:11px 14px;
+    font-size:13px;font-weight:700;color:var(--blue-dark);background:#f8fbff;border-bottom:1px solid #e8f0f8;
+  }
+  .board-count{font-size:11.5px;font-weight:400;color:var(--muted)}
+  .board-head,.brow{
+    display:grid;grid-template-columns:44px minmax(0,1fr) 62px 52px;
+    gap:6px;align-items:center;padding:9px 14px;
+  }
+  .board-head{font-size:11px;color:var(--muted);border-bottom:1px solid #eef4fa}
+  .board-list{max-height:280px;overflow:auto}
+  .brow{font-size:12.5px;border-bottom:1px solid #f1f6fb}
+  .brow:last-child{border-bottom:0}
+  .brow.me{background:#eef5ff}
+  .brk{color:var(--muted);font-variant-numeric:tabular-nums}
+  .brow.me .brk{color:var(--blue);font-weight:700}
+  .bname{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bname i{
+    font-style:normal;font-size:10px;line-height:1.5;color:#fff;background:var(--blue);
+    border-radius:4px;padding:0 4px;margin-left:4px;vertical-align:1px;
+  }
+  .bscore{font-weight:700;color:var(--blue-dark);font-variant-numeric:tabular-nums}
+  .btime{color:var(--muted);font-variant-numeric:tabular-nums}
+  .foot{text-align:center;color:#a7b7c8;font-size:11.5px;margin-top:20px;letter-spacing:.06em}
+  @media (max-width:420px){
+    body{padding:18px 12px 36px}
+    .card{padding:20px 17px 18px;border-radius:16px}
+    .word{font-size:26px}
+    .opt{font-size:14.5px;padding:11px 12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark">EN</div>
+    <div class="brand-t">WORD CHECK</div>
+    <div class="score-pill">已答 <b id="doneN">0</b> / 30</div>
+  </div>
+
+  <section class="card head">
+    <h1>11.28 专项检测</h1>
+    <p class="sub">11.28 词表 · 30 个高频词，选出正确的中文释义。点击选项立即判对错，并附释义与搭配。</p>
+    <div class="chips">
+      <span class="chip">decorate</span>
+      <span class="chip">neglect</span>
+      <span class="chip">indicate</span>
+      <span class="chip">modify</span>
+      <span class="chip">prohibit</span>
+      <span class="chip">treasure</span>
+      <span class="chip">promote</span>
+      <span class="chip">pretend</span>
+      <span class="chip">affect</span>
+      <span class="chip">confirm</span>
+      <span class="chip">suspect</span>
+      <span class="chip">consume</span>
+      <span class="chip">emphasize</span>
+      <span class="chip">assume</span>
+      <span class="chip">convince</span>
+      <span class="chip">punish</span>
+      <span class="chip">appreciate</span>
+      <span class="chip">admire</span>
+      <span class="chip">wander</span>
+      <span class="chip">consult</span>
+      <span class="chip">overlook</span>
+      <span class="chip">deny</span>
+      <span class="chip">establish</span>
+      <span class="chip">hunt</span>
+      <span class="chip">demonstrate</span>
+      <span class="chip">betray</span>
+      <span class="chip">evaluate</span>
+      <span class="chip">conflict</span>
+      <span class="chip">interrupt</span>
+      <span class="chip">observe</span>
+    </div>
+    <div class="fields">
+      <label class="field"><span>姓名</span><input id="stuName" maxlength="20" placeholder="请输入姓名" autocomplete="name"></label>
+      <label class="field"><span>班级 <i>选填</i></span><input id="stuClass" maxlength="20" placeholder="如：高一3班" autocomplete="off"></label>
+    </div>
+    <p class="formerr" id="formErr" hidden>请填写姓名后再提交。</p>
+    <p class="privacy">姓名、成绩和用时仅用于课堂统计；交卷后会显示在成绩榜中，本页其他作答者可见；不收集手机号等信息。</p>
+  </section>
+
+  <div id="qs"></div>
+
+  <section class="card summary" id="summary">
+    <div class="eyebrow">本次得分</div>
+    <div class="score"><span class="n" id="scoreN">0</span><span class="d">/ 30</span></div>
+    <div class="dots" id="dots"></div>
+    <p class="verdict" id="verdict"></p>
+    <p class="submit-note" id="submitNote"></p>
+    <p class="rank-note" id="rankNote" hidden></p>
+    <div class="board" id="boardWrap" hidden>
+      <div class="board-title"><span>成绩榜</span><span class="board-count" id="boardCount"></span></div>
+      <div class="board-head"><span>名次</span><span>姓名</span><span>得分</span><span>用时</span></div>
+      <div class="board-list" id="boardList"></div>
+    </div>
+    <button class="btn btn-primary" id="againBtn">重做一遍</button>
+  </section>
+
+  <div class="foot">11.28 专项检测 · 30 词</div>
+</div>
+
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const QS = [
+  {
+    w: "decorate", ipa: "/ˈdekəreɪt/", ans: 1,
+    opts: ["奉献；献身", "装饰；点缀", "宣布；宣告", "减少；降低"],
+    tip: "<b>decorate</b> 指“装饰；点缀”，如 decorate the room（装饰房间）。dedicate 是“奉献”，declare 是“宣布”，decrease 是“减少”。"
+  },
+  {
+    w: "neglect", ipa: "/nɪˈɡlekt/", ans: 3,
+    opts: ["保护；维护", "收集；采集", "拒绝；驳回", "忽视；疏忽"],
+    tip: "<b>neglect</b> 指“忽视；疏忽”，如 neglect one's duty（玩忽职守）。protect 是“保护”，collect 是“收集”，reject 是“拒绝”。"
+  },
+  {
+    w: "indicate", ipa: "/ˈɪndɪkeɪt/", ans: 0,
+    opts: ["表明；指示", "邀请；招待", "增加；增长", "想象；设想"],
+    tip: "<b>indicate</b> 指“表明；指示”，如 The sign indicates the way.（指示牌标明方向。）invite 是“邀请”，increase 是“增加”，imagine 是“想象”。"
+  },
+  {
+    w: "modify", ipa: "/ˈmɒdɪfaɪ/", ans: 2,
+    opts: ["使现代化", "证明；证实", "修改；调整", "模仿；仿效"],
+    tip: "<b>modify</b> 指“修改；调整”，如 modify the plan（调整计划）。modernize 是“使现代化”，prove 是“证明”，imitate 是“模仿”。"
+  },
+  {
+    w: "prohibit", ipa: "/prəˈhɪbɪt/", ans: 3,
+    opts: ["允许；准许", "提供；供应", "承诺；保证", "禁止；不准"],
+    tip: "<b>prohibit</b> 指“禁止”，常用 prohibit sb from doing sth。permit 是“允许”，provide 是“提供”，promise 是“承诺”。"
+  },
+  {
+    w: "treasure", ipa: "/ˈtreʒə(r)/", ans: 1,
+    opts: ["测量；衡量", "珍视；珍惜", "对待；处理", "训练；培养"],
+    tip: "<b>treasure</b> 作动词指“珍视；珍惜”，如 treasure the friendship（珍惜友谊）；作名词是“财宝”。measure 是“测量”，treat 是“对待”，train 是“训练”。"
+  },
+  {
+    w: "promote", ipa: "/prəˈməʊt/", ans: 0,
+    opts: ["促进；晋升", "提议；建议", "保护；保卫", "预测；预言"],
+    tip: "<b>promote</b> 指“促进；推广；晋升”，如 promote growth（促进增长）、be promoted（升职）。propose 是“提议”，protect 是“保护”，predict 是“预测”。"
+  },
+  {
+    w: "pretend", ipa: "/prɪˈtend/", ans: 2,
+    opts: ["打算；计划", "坚持；主张", "假装；装作", "阻止；妨碍"],
+    tip: "<b>pretend</b> 指“假装”，常用 pretend to do sth / pretend that...。intend 是“打算”，insist 是“坚持”，prevent 是“阻止”。"
+  },
+  {
+    w: "affect", ipa: "/əˈfekt/", ans: 2,
+    opts: ["效果；作用", "努力；尝试", "影响；感动", "接受；承认"],
+    tip: "<b>affect</b> 是动词，指“影响；感动”，如 affect the result（影响结果）、be deeply affected（深受感动）。effect 是名词“效果”，effort 是“努力”，accept 是“接受”。"
+  },
+  {
+    w: "confirm", ipa: "/kənˈfɜːm/", ans: 0,
+    opts: ["确认；证实", "限制；约束", "对比；对照", "处罚；惩罚"],
+    tip: "<b>confirm</b> 指“确认；证实”，如 confirm the booking（确认预订）。confine 是“限制”，contrast 是“对比”，punish 是“惩罚”。"
+  },
+  {
+    w: "suspect", ipa: "/səˈspekt/", ans: 3,
+    opts: ["尊敬；敬重", "预期；期待", "检查；检验", "怀疑；猜想"],
+    tip: "<b>suspect</b> 作动词指“怀疑；猜想”，如 suspect sb of sth（怀疑某人做了某事）；作名词是“嫌疑人”。respect 是“尊敬”，expect 是“期待”，inspect 是“检查”。"
+  },
+  {
+    w: "consume", ipa: "/kənˈsjuːm/", ans: 1,
+    opts: ["假设；假定", "消耗；消费", "咨询；请教", "使困惑；混淆"],
+    tip: "<b>consume</b> 指“消耗；消费”，如 consume energy（消耗能源）。assume 是“假设”，consult 是“咨询”，confuse 是“使困惑”。"
+  },
+  {
+    w: "emphasize", ipa: "/ˈemfəsaɪz/", ans: 1,
+    opts: ["使标准化", "强调；着重", "使现代化", "使具体化"],
+    tip: "<b>emphasize</b> 指“强调；着重”，如 emphasize the importance（强调重要性）。standardize 是“使标准化”，modernize 是“使现代化”，specify 是“具体说明”。"
+  },
+  {
+    w: "assume", ipa: "/əˈsjuːm/", ans: 3,
+    opts: ["消耗；消费", "保证；担保", "收集；聚集", "假设；承担"],
+    tip: "<b>assume</b> 指“假设；承担”，如 assume responsibility（承担责任）、Let us assume that...（假定……）。consume 是“消耗”，assure 是“保证”，assemble 是“聚集”。"
+  },
+  {
+    w: "convince", ipa: "/kənˈvɪns/", ans: 0,
+    opts: ["使确信；说服", "征服；战胜", "使困惑；使迷惑", "使满意；使高兴"],
+    tip: "<b>convince</b> 指“使确信；说服”，常用 convince sb of sth / convince sb to do sth。conquer 是“征服”，confuse 是“使困惑”，content 是“使满意”。"
+  },
+  {
+    w: "punish", ipa: "/ˈpʌnɪʃ/", ans: 2,
+    opts: ["公布；出版", "完成；实现", "惩罚；处罚", "磨光；擦亮"],
+    tip: "<b>punish</b> 指“惩罚；处罚”，如 punish sb for sth。publish 是“公布；出版”，finish 是“完成”，polish 是“磨光”。"
+  },
+  {
+    w: "appreciate", ipa: "/əˈpriːʃieɪt/", ans: 3,
+    opts: ["理解；领会", "接近；靠近", "批准；认可", "欣赏；感激"],
+    tip: "<b>appreciate</b> 指“欣赏；感激”，如 appreciate your help（感谢你的帮助）、appreciate music（欣赏音乐）。approach 是“接近”，approve 是“批准”。"
+  },
+  {
+    w: "admire", ipa: "/ədˈmaɪə(r)/", ans: 1,
+    opts: ["承认；招认", "钦佩；赞赏", "提醒；使想起", "建议；劝告"],
+    tip: "<b>admire</b> 指“钦佩；赞赏”，如 admire sb for sth（因某事钦佩某人）。admit 是“承认”，remind 是“提醒”，advise 是“建议”。"
+  },
+  {
+    w: "wander", ipa: "/ˈwɒndə(r)/", ans: 0,
+    opts: ["漫步；走神", "想知道；纳闷", "工作；劳动", "怀疑；质疑"],
+    tip: "<b>wander</b> 指“漫步；闲逛”，也指“走神”（wander off topic）。wonder 是“想知道；纳闷”，两者只差一个字母，注意区分。"
+  },
+  {
+    w: "consult", ipa: "/kənˈsʌlt/", ans: 2,
+    opts: ["消耗；花费", "隔离；使隔绝", "咨询；查阅", "安慰；慰问"],
+    tip: "<b>consult</b> 指“咨询；查阅”，如 consult a dictionary（查词典）、consult a doctor（看医生）。consume 是“消耗”，insulate 是“隔离”，console 是“安慰”。"
+  },
+  {
+    w: "overlook", ipa: "/ˌəʊvəˈlʊk/", ans: 2,
+    opts: ["超过；赶上", "敬重；仰慕", "忽视；俯瞰", "照看；照料"],
+    tip: "<b>overlook</b> 指“忽视；俯瞰”，如 overlook a mistake（忽略错误）、overlook the sea（俯瞰大海）。overtake 是“超过”，look up to 是“敬重”，look after 是“照看”。"
+  },
+  {
+    w: "deny", ipa: "/dɪˈnaɪ/", ans: 0,
+    opts: ["否认；拒绝", "依赖；依靠", "装饰；点缀", "定义；界定"],
+    tip: "<b>deny</b> 指“否认；拒绝给予”，如 deny doing sth（否认做过某事）、deny the request（拒绝请求）。depend 是“依靠”，decorate 是“装饰”，define 是“定义”。"
+  },
+  {
+    w: "establish", ipa: "/ɪˈstæblɪʃ/", ans: 1,
+    opts: ["估计；估算", "建立；确立", "消灭；消除", "使稳定；使稳固"],
+    tip: "<b>establish</b> 指“建立；确立”，如 establish a school（创办学校）、establish a rule（确立规则）。estimate 是“估计”，eliminate 是“消除”，stabilize 是“使稳定”。"
+  },
+  {
+    w: "hunt", ipa: "/hʌnt/", ans: 3,
+    opts: ["伤害；损害", "拥抱；搂抱", "哼唱；嗡嗡叫", "打猎；搜寻"],
+    tip: "<b>hunt</b> 指“打猎；搜寻”，如 hunt for a job（找工作）。hurt 是“伤害”，hug 是“拥抱”，hum 是“哼唱”。"
+  },
+  {
+    w: "demonstrate", ipa: "/ˈdemənstreɪt/", ans: 3,
+    opts: ["拆除；拆卸", "集中；浓缩", "宣布；公告", "证明；演示"],
+    tip: "<b>demonstrate</b> 指“证明；演示”，也可指“示威”，如 demonstrate how it works（演示如何运作）。dismantle 是“拆除”，concentrate 是“集中”，announce 是“宣布”。"
+  },
+  {
+    w: "betray", ipa: "/bɪˈtreɪ/", ans: 1,
+    opts: ["延迟；耽搁", "背叛；出卖", "使困惑；使为难", "报答；回报"],
+    tip: "<b>betray</b> 指“背叛；出卖”，也指“流露”，如 betray one's feelings（流露情感）。delay 是“延迟”，bewilder 是“使困惑”，repay 是“报答”。"
+  },
+  {
+    w: "evaluate", ipa: "/ɪˈvæljueɪt/", ans: 0,
+    opts: ["评估；评价", "逃跑；逃避", "蒸发；消失", "使有效；使生效"],
+    tip: "<b>evaluate</b> 指“评估；评价”，如 evaluate the results（评估结果）。evade 是“逃避”，evaporate 是“蒸发”，validate 是“使生效”。"
+  },
+  {
+    w: "conflict", ipa: "/ˈkɒnflɪkt/", ans: 2,
+    opts: ["会议；集会", "信心；信念", "冲突；矛盾", "便利；方便"],
+    tip: "<b>conflict</b> 指“冲突；矛盾”，如 in conflict with（与……冲突）。conference 是“会议”，confidence 是“信心”，convenience 是“便利”。"
+  },
+  {
+    w: "interrupt", ipa: "/ˌɪntəˈrʌpt/", ans: 1,
+    opts: ["解释；说明", "打断；中断", "采访；面试", "翻译；转化"],
+    tip: "<b>interrupt</b> 指“打断；中断”，如 interrupt the speaker（打断发言者）。interpret 是“解释；口译”，interview 是“采访”，translate 是“翻译”。"
+  },
+  {
+    w: "observe", ipa: "/əbˈzɜːv/", ans: 3,
+    opts: ["保护；保存", "获得；取得", "反对；反抗", "观察；遵守"],
+    tip: "<b>observe</b> 指“观察；遵守”，如 observe the behaviour（观察行为）、observe the rules（遵守规则）。preserve 是“保存”，obtain 是“获得”，oppose 是“反对”。"
+  }
+];
+
+const LETTERS = ["A", "B", "C", "D"];
+const CFG = window.WORD_CHECK_CONFIG || {};
+const NAME_KEY = "wc_stu_name", CLASS_KEY = "wc_stu_class";
+const state = { picks: new Array(QS.length).fill(-1), right: 0, detail: [], startedAt: 0, subId: "", submitted: false, db: null };
+const qsEl = document.getElementById("qs");
+const summaryEl = document.getElementById("summary");
+
+function uid() {
+  if (window.crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+function stuName() {
+  return document.getElementById("stuName").value.trim().slice(0, 20);
+}
+
+function stuClass() {
+  return document.getElementById("stuClass").value.trim().slice(0, 20);
+}
+
+function build() {
+  qsEl.innerHTML = "";
+  summaryEl.classList.remove("show");
+  state.picks.fill(-1);
+  state.submitted = false;
+  state.detail = [];
+  state.startedAt = Date.now();
+  state.subId = uid();
+  document.getElementById("submitNote").textContent = "";
+  document.getElementById("submitNote").className = "submit-note";
+  document.getElementById("rankNote").textContent = "";
+  document.getElementById("rankNote").hidden = true;
+  document.getElementById("boardWrap").hidden = true;
+  document.getElementById("boardList").innerHTML = "";
+  document.getElementById("formErr").hidden = true;
+  document.getElementById("doneN").textContent = "0";
+
+  QS.forEach((q, qi) => {
+    const card = document.createElement("section");
+    card.className = "card q";
+    card.style.animationDelay = (qi * 30) + "ms";
+
+    const head = document.createElement("div");
+    head.className = "qhead";
+    head.innerHTML = '<span class="qno">QUESTION ' + String(qi + 1).padStart(2, "0") + '</span><span class="state">未作答</span>';
+    card.appendChild(head);
+
+    const word = document.createElement("div");
+    word.className = "word";
+    word.textContent = q.w;
+    card.appendChild(word);
+
+    const ipa = document.createElement("div");
+    ipa.className = "ipa";
+    ipa.textContent = q.ipa;
+    card.appendChild(ipa);
+
+    const opts = document.createElement("div");
+    opts.className = "opts";
+    q.opts.forEach((text, oi) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt";
+      b.innerHTML = '<span class="k">' + LETTERS[oi] + '</span><span class="txt"></span>';
+      b.querySelector(".txt").textContent = text;
+      b.addEventListener("click", function () { choose(qi, oi); });
+      opts.appendChild(b);
+    });
+    card.appendChild(opts);
+    qsEl.appendChild(card);
+  });
+}
+
+function choose(qi, oi) {
+  if (state.picks[qi] !== -1) return;
+  const q = QS[qi];
+  state.picks[qi] = oi;
+
+  const card = qsEl.children[qi];
+  const buttons = card.querySelectorAll(".opt");
+  buttons.forEach(function (b, bi) {
+    b.disabled = true;
+    if (bi === q.ans) b.classList.add("right");
+    else if (bi === oi) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+
+  const ok = oi === q.ans;
+  const st = card.querySelector(".state");
+  st.textContent = ok ? "答对了" : "答错了";
+  st.classList.add(ok ? "ok" : "no");
+
+  const exp = document.createElement("div");
+  exp.className = "exp";
+  exp.innerHTML = (ok ? "" : "正确答案是 " + LETTERS[q.ans] + "。<br>") + q.tip;
+  card.appendChild(exp);
+
+  const done = state.picks.filter(function (v) { return v !== -1; }).length;
+  document.getElementById("doneN").textContent = done;
+  if (done === QS.length) showSummary();
+}
+
+function showSummary() {
+  const right = QS.reduce(function (sum, q, i) { return sum + (state.picks[i] === q.ans ? 1 : 0); }, 0);
+  document.getElementById("scoreN").textContent = right;
+
+  state.right = right;
+  state.detail = QS.map(function (q, i) {
+    const picked = state.picks[i];
+    return {
+      type: "e2c", word: q.w, mean: q.opts[q.ans], answer: q.opts[q.ans],
+      picked: picked >= 0 ? q.opts[picked] : "", ok: picked === q.ans
+    };
+  });
+
+  const dots = document.getElementById("dots");
+  dots.innerHTML = "";
+  QS.forEach(function (q, i) {
+    const d = document.createElement("span");
+    d.className = "dot" + (state.picks[i] === q.ans ? "" : " bad");
+    dots.appendChild(d);
+  });
+
+  const wrong = QS.filter(function (q, i) { return state.picks[i] !== q.ans; }).map(function (q) { return q.w; });
+  const miss = QS.length - right;
+  const v = document.getElementById("verdict");
+  if (miss === 0) v.innerHTML = "30 题全对，这组词掌握扎实，可以直接进入下一组。";
+  else if (miss <= 3) v.innerHTML = "错 " + miss + " 题。把错词 <span class=\"wl\">" + wrong.join("、") + "</span> 的释义和搭配读两遍。";
+  else if (miss <= 6) v.innerHTML = "错 " + miss + " 题。重点区分词形相近、义项易混的词：<span class=\"wl\">" + wrong.join("、") + "</span>。";
+  else v.innerHTML = "错 " + miss + " 题。先过一遍这 30 个词的释义和搭配，再重测。<span class=\"wl\">" + wrong.join("、") + "</span>";
+
+  summaryEl.classList.add("show");
+  requestSubmit(right);
+}
+
+function getClient() {
+  if (!window.supabase || typeof window.supabase.createClient !== "function") throw new Error("SDK 未加载");
+  if (!state.db) state.db = window.supabase.createClient(CFG.url, CFG.anonKey);
+  return state.db;
+}
+
+function requestSubmit(score) {
+  const note = document.getElementById("submitNote");
+  if (!CFG.url || !CFG.anonKey) {
+    note.className = "submit-note";
+    note.textContent = "本地预览：未连接统计后台，本次成绩不会上传。";
+    return;
+  }
+  if (!stuName()) {
+    note.className = "submit-note";
+    note.innerHTML = '成绩还未提交。<button type="button" id="gateBtn">填写姓名并提交</button>';
+    document.getElementById("gateBtn").onclick = function () {
+      document.getElementById("formErr").hidden = false;
+      document.getElementById("stuName").classList.add("err");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(function () { document.getElementById("stuName").focus(); }, 300);
+    };
+    return;
+  }
+  submitResult(score, state.detail);
+}
+
+async function submitResult(score, detail) {
+  const note = document.getElementById("submitNote");
+  if (state.submitted) return;
+
+  const name = stuName(), klass = stuClass();
+  try {
+    localStorage.setItem(NAME_KEY, name);
+    localStorage.setItem(CLASS_KEY, klass);
+  } catch (e) {}
+
+  const payload = {
+    sub_id: state.subId,
+    name: name,
+    klass: klass,
+    quiz: "special",
+    score: score,
+    total: QS.length,
+    duration_ms: Math.max(0, Date.now() - state.startedAt),
+    started_at: new Date(state.startedAt).toISOString(),
+    answers: detail
+  };
+  const delays = [1000, 3000, 6000];
+  const current = function () { return state.subId === payload.sub_id; };
+
+  for (let attempt = 0; attempt <= 3; attempt++) {
+    if (!current()) return;
+    note.className = "submit-note";
+    note.textContent = attempt === 0 ? "正在提交成绩…" : "提交失败，正在重试（" + attempt + "/3）…";
+    try {
+      const res = await getClient().from(CFG.table || "submissions").insert(payload);
+      if (res && res.error) throw res.error;
+      if (!current()) return;
+      state.submitted = true;
+      document.getElementById("formErr").hidden = true;
+      document.getElementById("stuName").classList.remove("err");
+      note.className = "submit-note ok";
+      note.textContent = "成绩已提交给老师。";
+      showBoard(payload.sub_id);
+      return;
+    } catch (e) {
+      if (!current()) return;
+      if (attempt === 3) {
+        note.className = "submit-note no";
+        note.innerHTML = '成绩已生成，但提交未成功。<button type="button" id="retryBtn">重新提交</button>';
+        document.getElementById("retryBtn").onclick = function () { submitResult(score, detail); };
+        return;
+      }
+      await new Promise(function (r) { setTimeout(r, delays[attempt]); });
+    }
+  }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+function fmtDur(ms) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+async function showBoard(subId) {
+  const wrap = document.getElementById("boardWrap");
+  const el = document.getElementById("rankNote");
+  if (!wrap) return;
+  try {
+    const r = await getClient().rpc("quiz_leaderboard", { p_sub_id: subId });
+    if (r && r.error) throw r.error;
+    const rows = (r && r.data) || [];
+    if (!rows.length || state.subId !== subId) return;
+    const me = rows.filter(function (x) { return x.is_me; })[0];
+    const players = rows.length;
+    if (me) {
+      const rank = Number(me.rank) || 0;
+      const mine = Number(me.score) || 0;
+      const lower = rows.filter(function (x) { return Number(x.score) < mine; }).length;
+      const pct = players ? Math.round(lower * 100 / players) : 0;
+      if (players === 1) {
+        el.innerHTML = "你是<b>第 1 位</b>完成这份检测的同学。";
+      } else {
+        el.innerHTML = "本次成绩在<b>" + players + "</b>位作答者中排<b>第 " + rank + " 名</b>"
+          + (pct > 0 ? "，超过<b>" + pct + "%</b>的作答者。" : "。");
+      }
+      el.hidden = false;
+    }
+    document.getElementById("boardCount").textContent = players + " 人";
+    document.getElementById("boardList").innerHTML = rows.map(function (x) {
+      const score = Number(x.score) || 0, total = Number(x.total) || 0;
+      return '<div class="brow' + (x.is_me ? " me" : "") + '">'
+        + '<span class="brk">' + (Number(x.rank) || 0) + "</span>"
+        + '<span class="bname">' + escapeHtml(x.name) + (x.is_me ? "<i>你</i>" : "") + "</span>"
+        + '<span class="bscore">' + score + "/" + total + "</span>"
+        + '<span class="btime">' + fmtDur(Number(x.duration_ms) || 0) + "</span></div>";
+    }).join("");
+    wrap.hidden = false;
+  } catch (e) {}
+}
+
+document.getElementById("stuName").addEventListener("input", function () {
+  if (!summaryEl.classList.contains("show") || state.submitted) return;
+  if (stuName()) {
+    document.getElementById("formErr").hidden = true;
+    this.classList.remove("err");
+    requestSubmit(state.right);
+  }
+});
+
+document.getElementById("againBtn").addEventListener("click", function () {
+  build();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+try {
+  document.getElementById("stuName").value = localStorage.getItem(NAME_KEY) || "";
+  document.getElementById("stuClass").value = localStorage.getItem(CLASS_KEY) || "";
+} catch (e) {}
+
+build();
+</script>
+</body>
+</html>
